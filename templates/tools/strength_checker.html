@@ -33,7 +33,13 @@
         <div class="meter-track">
             <div id="auditFill" class="meter-fill" style="width: 0%;"></div>
         </div>
-        <div id="auditCrackTime" class="text-[11px] text-slate-400">Estimated crack time: -</div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+            <div id="auditCrackTime">Estimated crack time: -</div>
+            <button type="button" id="saveStrengthResultBtn" class="btn btn-secondary text-xs py-1 px-3 flex items-center gap-1.5" title="Save Audit to Activity History">
+                <i data-lucide="bookmark" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Save Result</span>
+            </button>
+        </div>
     </div>
 
     <!-- Character Composition Breakdown -->

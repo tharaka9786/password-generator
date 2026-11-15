@@ -26,6 +26,8 @@ class TestRoutes(unittest.TestCase):
             ("/tools/hash", b"Hash Generator"),
             ("/tools/breach-checker", b"Data Breach"),
             ("/tools/sinhala-humanizer", b"Sinhala Humanizer"),
+            ("/login", b"Sign In to PassForge"),
+            ("/register", b"Create PassForge Vault"),
         ]
         for route, expected_text in routes:
             with self.subTest(route=route):

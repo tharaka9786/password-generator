@@ -7,7 +7,8 @@ Modular application utilizing Flask Blueprints for scalable multi-page architect
 from __future__ import annotations
 
 import os
-from flask import Flask, has_request_context, jsonify, make_response, request
+from flask import Flask, has_request_context, jsonify, make_response, redirect, request, url_for
+from flask_login import LoginManager
 
 # Load environment variables from .env if python-dotenv is installed
 try:
@@ -23,18 +24,32 @@ from blueprints.strength_checker.routes import strength_bp
 from blueprints.hash_generator.routes import hash_bp
 from blueprints.breach_checker.routes import breach_bp
 from blueprints.sinhala_humanizer.routes import humanizer_bp
+from blueprints.account.routes import account_bp
 from blueprints.translations import (
     DEFAULT_LANGUAGE,
     SUPPORTED_LANGUAGES,
     get_localized_tools_catalog,
     get_translation,
 )
-from models import db
+from models import User, db
+
+login_manager = LoginManager()
 
 
-def create_app() -> Flask:
+@login_manager.user_loader
+def load_user(user_id: str) -> User | None:
+    """Flask-Login user loader callback."""
+    try:
+        return db.session.get(User, int(user_id))
+    except (ValueError, TypeError):
+        return None
+
+
+def create_app(testing: bool = False) -> Flask:
     """Application factory for PassForge."""
     app = Flask(__name__)
+    if testing:
+        app.config["TESTING"] = True
 
     # Security configuration
     app.config["SECRET_KEY"] = os.environ.get(
@@ -42,15 +57,39 @@ def create_app() -> Flask:
     )
 
     # Database configuration
-    database_url = os.environ.get("DATABASE_URL")
-    if database_url:
-        app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    if app.config.get("TESTING"):
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
     else:
-        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///passforge_fallback.db"
+        database_url = os.environ.get("DATABASE_URL")
+        if database_url:
+            app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+        else:
+            app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///passforge_fallback.db"
+
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 280,
+        "pool_pre_ping": True,
+    }
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Initialize database
     db.init_app(app)
+
+    # Configure Flask-Login
+    login_manager.init_app(app)
+    login_manager.login_view = "account.login"
+    login_manager.login_message = "Please sign in to access your secure vault and history."
+    login_manager.login_message_category = "info"
+
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        if request.path.startswith("/api/") or request.is_json:
+            return jsonify({
+                "success": False,
+                "error": "Authentication required. Please log in to access this feature.",
+                "authenticated": False,
+            }), 401
+        return redirect(url_for("account.login", next=request.url))
 
     # Register Blueprints
     app.register_blueprint(pages_bp)
@@ -60,6 +99,7 @@ def create_app() -> Flask:
     app.register_blueprint(hash_bp)
     app.register_blueprint(breach_bp)
     app.register_blueprint(humanizer_bp)
+    app.register_blueprint(account_bp)
 
     def get_current_lang() -> str:
         if has_request_context():

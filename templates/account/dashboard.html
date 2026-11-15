@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+
+{% block title %}My Vault &amp; History — PassForge{% endblock %}
+{% block description %}Secure encrypted vault for passwords, Sinhala text history, and security tool audits.{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 py-8 flex-1 max-w-6xl">
+    <!-- Dashboard Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">My Vault &amp; Activity</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>Encrypted</span>
+                </span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">
+                Signed in as <strong class="text-slate-200">{{ current_user.username }}</strong> ({{ current_user.email }}) &middot; AES-128 Fernet encrypted storage
+            </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="{{ url_for('pages.tools_hub') }}" class="btn btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5">
+                <i data-lucide="wrench" class="w-4 h-4"></i>
+                <span>Explore Tools</span>
+            </a>
+            <a href="{{ url_for('account.logout') }}" class="btn btn-icon text-xs py-2 px-3 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10" title="Sign Out">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Logout</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div class="p-4 rounded-xl bg-slate-900/80 border border-white/10 backdrop-blur-md flex items-center justify-between">
+            <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Vault Credentials</span>
+                <div class="text-2xl font-black text-cyan-400 mt-1" id="statVaultCount">{{ vault_items|length }}</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                <i data-lucide="key-round" class="w-5 h-5"></i>
+            </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900/80 border border-white/10 backdrop-blur-md flex items-center justify-between">
+            <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Humanizer Texts</span>
+                <div class="text-2xl font-black text-amber-400 mt-1" id="statHumanizerCount">{{ humanizer_history|length }}</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+            </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900/80 border border-white/10 backdrop-blur-md flex items-center justify-between">
+            <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Tool Audits</span>
+                <div class="text-2xl font-black text-indigo-400 mt-1" id="statActivityCount">{{ tool_history|length }}</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                <i data-lucide="activity" class="w-5 h-5"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="flex items-center gap-2 border-b border-white/10 mb-6 overflow-x-auto pb-1" role="tablist">
+        <button type="button" class="dashboard-tab-btn active px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-2 text-white bg-indigo-600 shadow-md shadow-indigo-600/20" data-tab="tabVault">
+            <i data-lucide="shield" class="w-4 h-4 text-cyan-400"></i>
+            <span>Vault Credentials ({{ vault_items|length }})</span>
+        </button>
+        <button type="button" class="dashboard-tab-btn px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-white/5" data-tab="tabHumanizer">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+            <span>Sinhala Humanizer ({{ humanizer_history|length }})</span>
+        </button>
+        <button type="button" class="dashboard-tab-btn px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-white/5" data-tab="tabActivity">
+            <i data-lucide="history" class="w-4 h-4 text-emerald-400"></i>
+            <span>Tool Activity ({{ tool_history|length }})</span>
+        </button>
+    </div>
+
+    <!-- ==================== TAB 1: VAULT CREDENTIALS ==================== -->
+    <div id="tabVault" class="dashboard-panel flex flex-col gap-4">
+        {% if vault_items %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="vaultGrid">
+                {% for item in vault_items %}
+                    <div class="p-5 rounded-2xl bg-slate-900/90 border border-white/10 flex flex-col justify-between gap-3 shadow-lg relative group transition hover:border-cyan-500/40" id="vault-item-{{ item.id }}">
+                        <div>
+                            <div class="flex items-start justify-between gap-2">
+                                <h3 class="font-bold text-base text-white tracking-tight break-all">{{ item.title }}</h3>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider shrink-0 {% if item.category == 'account_pair' %}bg-cyan-500/10 text-cyan-300 border border-cyan-500/20{% elif item.category == 'username' %}bg-emerald-500/10 text-emerald-300 border border-emerald-500/20{% else %}bg-indigo-500/10 text-indigo-300 border border-indigo-500/20{% endif %}">
+                                    {{ item.category }}
+                                </span>
+                            </div>
+
+                            {% if item.username_value %}
+                                <div class="mt-2.5 flex items-center justify-between text-xs font-mono bg-slate-950/70 p-2 rounded-lg border border-white/5">
+                                    <span class="text-slate-400 text-[11px]">User:</span>
+                                    <span class="font-bold text-emerald-400 break-all ml-1">{{ item.username_value }}</span>
+                                    <button type="button" class="copy-text-btn mini-copy shrink-0 ml-2" data-copy="{{ item.username_value }}" title="Copy Username">Copy</button>
+                                </div>
+                            {% endif %}
+
+                            <!-- Password Box -->
+                            <div class="mt-2 flex items-center justify-between text-xs font-mono bg-slate-950/70 p-2 rounded-lg border border-white/5">
+                                <span class="text-slate-400 text-[11px]">Pass:</span>
+                                <span class="font-bold text-slate-300 password-mask break-all ml-1" id="pw-display-{{ item.id }}">••••••••••••</span>
+                                <div class="flex items-center gap-1 shrink-0 ml-2">
+                                    <button type="button" class="reveal-btn text-[11px] px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 transition" data-id="{{ item.id }}" title="Reveal Password">
+                                        Reveal
+                                    </button>
+                                    <button type="button" class="copy-vault-btn mini-copy" data-id="{{ item.id }}" title="Copy Password">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+
+                            {% if item.notes %}
+                                <p class="text-xs text-slate-400 mt-2.5 bg-white/[0.02] p-2 rounded border border-white/5 italic">
+                                    {{ item.notes }}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-500">
+                            <span>Saved: {{ item.created_at.strftime('%Y-%m-%d %H:%M') if item.created_at else '-' }}</span>
+                            <button type="button" class="delete-item-btn text-rose-400 hover:text-rose-300 text-xs flex items-center gap-1 transition" data-type="vault" data-id="{{ item.id }}">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                <span>Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="p-12 rounded-2xl bg-slate-900/50 border border-white/5 text-center flex flex-col items-center justify-center">
+                <div class="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-3">
+                    <i data-lucide="shield" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-base font-bold text-white">Your Vault is Empty</h3>
+                <p class="text-xs text-slate-400 max-w-sm mt-1">Generate strong passwords, usernames, or account pairs and click "Save to Vault" to protect them with zero-knowledge AES encryption.</p>
+                <a href="{{ url_for('password.password_tool') }}" class="btn btn-primary text-xs py-2 px-4 mt-4">
+                    Go to Password Generator
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ==================== TAB 2: SINHALA HUMANIZER HISTORY ==================== -->
+    <div id="tabHumanizer" class="dashboard-panel hidden flex flex-col gap-4">
+        {% if humanizer_history %}
+            <div class="flex flex-col gap-4" id="humanizerGrid">
+                {% for item in humanizer_history %}
+                    <div class="p-5 rounded-2xl bg-slate-900/90 border border-white/10 flex flex-col gap-4 shadow-lg transition hover:border-amber-500/40" id="humanizer-item-{{ item.id }}">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                    {{ item.mode|upper }} MODE
+                                </span>
+                                {% if item.ai_score is not none %}
+                                    <span class="px-2 py-0.5 rounded text-xs font-mono font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                                        AI Score: {{ (item.ai_score * 100)|round(1) }}%
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="flex items-center gap-3 text-xs text-slate-400">
+                                <span>{{ item.created_at.strftime('%Y-%m-%d %H:%M') if item.created_at else '-' }}</span>
+                                <button type="button" class="delete-item-btn text-rose-400 hover:text-rose-300 flex items-center gap-1 transition" data-type="humanizer" data-id="{{ item.id }}">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    <span>Delete</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Original Input -->
+                            <div class="p-3.5 rounded-xl bg-slate-950/70 border border-white/5 flex flex-col gap-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Original AI Sinhala</span>
+                                <p class="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto font-sans">{{ item.original_text }}</p>
+                            </div>
+
+                            <!-- Humanized Output -->
+                            <div class="p-3.5 rounded-xl bg-slate-950/70 border border-white/5 flex flex-col justify-between gap-2">
+                                <div>
+                                    <span class="text-xs font-semibold uppercase tracking-wider text-amber-400">Humanized Sinhala</span>
+                                    <p class="text-xs text-slate-100 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto font-sans mt-1">{{ item.humanized_text }}</p>
+                                </div>
+                                <div class="flex items-center justify-end gap-2 pt-2 border-t border-white/5 mt-2">
+                                    <button type="button" class="copy-text-btn btn btn-primary text-xs py-1 px-3" data-copy="{{ item.humanized_text }}">
+                                        <i data-lucide="copy" class="w-3 h-3"></i>
+                                        <span>Copy Text</span>
+                                    </button>
+                                    {% if item.fm_abhaya_text %}
+                                        <button type="button" class="copy-text-btn btn btn-secondary text-xs py-1 px-3" data-copy="{{ item.fm_abhaya_text }}">
+                                            <span>Copy FM Abhaya</span>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="p-12 rounded-2xl bg-slate-900/50 border border-white/5 text-center flex flex-col items-center justify-center">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-3">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-base font-bold text-white">No Humanizer History</h3>
+                <p class="text-xs text-slate-400 max-w-sm mt-1">Convert robotic AI Sinhala text with the Sinhala Humanizer tool and save outputs here for easy reference.</p>
+                <a href="{{ url_for('sinhala_humanizer.sinhala_humanizer_tool') }}" class="btn btn-primary text-xs py-2 px-4 mt-4">
+                    Open Sinhala Humanizer
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ==================== TAB 3: TOOL ACTIVITY HISTORY ==================== -->
+    <div id="tabActivity" class="dashboard-panel hidden flex flex-col gap-4">
+        {% if tool_history %}
+            <div class="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/90 shadow-xl">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-white/10 bg-white/[0.02] text-slate-400 uppercase tracking-wider font-semibold">
+                            <th class="py-3.5 px-4">Tool</th>
+                            <th class="py-3.5 px-4">Input / Parameters</th>
+                            <th class="py-3.5 px-4">Audit Result Summary</th>
+                            <th class="py-3.5 px-4">Logged At</th>
+                            <th class="py-3.5 px-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5" id="activityTableBody">
+                        {% for item in tool_history %}
+                            <tr class="hover:bg-white/[0.02] transition" id="activity-item-{{ item.id }}">
+                                <td class="py-3 px-4 font-bold text-white whitespace-nowrap">
+                                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold {% if item.tool_name == 'strength_checker' %}bg-amber-500/10 text-amber-300 border border-amber-500/20{% elif item.tool_name == 'breach_checker' %}bg-rose-500/10 text-rose-300 border border-rose-500/20{% else %}bg-purple-500/10 text-purple-300 border border-purple-500/20{% endif %}">
+                                        {{ item.tool_name|replace('_', ' ')|title }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-slate-300 max-w-xs truncate" title="{{ item.input_summary }}">
+                                    {{ item.input_summary|default('-', true) }}
+                                </td>
+                                <td class="py-3 px-4 text-slate-200 max-w-md truncate font-mono text-[11px]" title="{{ item.result_summary }}">
+                                    {{ item.result_summary }}
+                                </td>
+                                <td class="py-3 px-4 text-slate-400 whitespace-nowrap font-mono text-[11px]">
+                                    {{ item.created_at.strftime('%Y-%m-%d %H:%M') if item.created_at else '-' }}
+                                </td>
+                                <td class="py-3 px-4 text-right whitespace-nowrap">
+                                    <button type="button" class="delete-item-btn text-rose-400 hover:text-rose-300 transition" data-type="activity" data-id="{{ item.id }}">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-12 rounded-2xl bg-slate-900/50 border border-white/5 text-center flex flex-col items-center justify-center">
+                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-3">
+                    <i data-lucide="activity" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-base font-bold text-white">No Tool Activity Recorded</h3>
+                <p class="text-xs text-slate-400 max-w-sm mt-1">Audit passwords, compute cryptographic hashes, or check breach databases, then click "Save Result" to maintain your personal security log.</p>
+                <a href="{{ url_for('pages.tools_hub') }}" class="btn btn-primary text-xs py-2 px-4 mt-4">
+                    Explore Security Tools
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module">
+    import { getApiEndpoint } from "{{ url_for('static', filename='js/shared/api.js') }}";
+    import { showToast } from "{{ url_for('static', filename='js/shared/toast.js') }}";
+
+    // 1. Tab Switching Logic
+    const tabBtns = document.querySelectorAll('.dashboard-tab-btn');
+    const tabPanels = document.querySelectorAll('.dashboard-panel');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => {
+                b.classList.remove('active', 'bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-600/20');
+                b.classList.add('text-slate-400');
+            });
+            tabPanels.forEach(p => p.classList.add('hidden'));
+
+            btn.classList.add('active', 'bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-600/20');
+            btn.classList.remove('text-slate-400');
+
+            const targetId = btn.getAttribute('data-tab');
+            const targetPanel = document.getElementById(targetId);
+            if (targetPanel) {
+                targetPanel.classList.remove('hidden');
+            }
+        });
+    });
+
+    // 2. Reveal Password Handler
+    document.querySelectorAll('.reveal-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const itemId = btn.getAttribute('data-id');
+            const displayEl = document.getElementById(`pw-display-${itemId}`);
+            if (!displayEl) return;
+
+            if (btn.getAttribute('data-revealed') === 'true') {
+                displayEl.textContent = '••••••••••••';
+                displayEl.classList.add('password-mask');
+                btn.textContent = 'Reveal';
+                btn.setAttribute('data-revealed', 'false');
+                return;
+            }
+
+            btn.textContent = '...';
+            try {
+                const res = await fetch(getApiEndpoint(`vault/${itemId}/reveal`));
+                const data = await res.json();
+                if (data.success) {
+                    displayEl.textContent = data.password;
+                    displayEl.classList.remove('password-mask');
+                    btn.textContent = 'Hide';
+                    btn.setAttribute('data-revealed', 'true');
+                } else {
+                    showToast(data.error || 'Failed to decrypt password.');
+                    btn.textContent = 'Reveal';
+                }
+            } catch (err) {
+                showToast('Failed to reveal password.');
+                btn.textContent = 'Reveal';
+            }
+        });
+    });
+
+    // 3. Copy Vault Password
+    document.querySelectorAll('.copy-vault-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const itemId = btn.getAttribute('data-id');
+            const originalText = btn.textContent;
+            btn.textContent = '...';
+            try {
+                const res = await fetch(getApiEndpoint(`vault/${itemId}/reveal`));
+                const data = await res.json();
+                if (data.success && data.password) {
+                    await navigator.clipboard.writeText(data.password);
+                    showToast('Vault password copied to clipboard!');
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => { btn.textContent = originalText; }, 1500);
+                } else {
+                    showToast(data.error || 'Failed to copy password.');
+                    btn.textContent = originalText;
+                }
+            } catch (err) {
+                showToast('Copy failed.');
+                btn.textContent = originalText;
+            }
+        });
+    });
+
+    // 4. Generic Copy Text Buttons
+    document.querySelectorAll('.copy-text-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const textToCopy = btn.getAttribute('data-copy');
+            if (!textToCopy) return;
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                showToast('Copied to clipboard!');
+            } catch (err) {
+                showToast('Failed to copy text.');
+            }
+        });
+    });
+
+    // 5. Delete Item Handler (Vault, Humanizer, Activity)
+    document.querySelectorAll('.delete-item-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const itemType = btn.getAttribute('data-type');
+            const itemId = btn.getAttribute('data-id');
+
+            if (!confirm(`Are you sure you want to delete this ${itemType} item?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(getApiEndpoint(`history/${itemType}/${itemId}`), {
+                    method: 'DELETE',
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || 'Deleted successfully.');
+                    const element = document.getElementById(`${itemType}-item-${itemId}`);
+                    if (element) {
+                        element.style.opacity = '0';
+                        element.style.transform = 'scale(0.95)';
+                        setTimeout(() => element.remove(), 250);
+                    }
+                } else {
+                    showToast(data.error || 'Failed to delete item.');
+                }
+            } catch (err) {
+                showToast('Failed to delete item.');
+            }
+        });
+    });
+</script>
+{% endblock %}

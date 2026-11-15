@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — PassForge Security Suite{% endblock %}
+{% block description %}Access your encrypted PassForge Vault, credentials, and tool history.{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 py-12 flex-1 flex items-center justify-center">
+    <div class="w-full max-w-md">
+        <!-- Auth Card -->
+        <div class="p-6 sm:p-8 rounded-2xl bg-slate-900/90 border border-white/10 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+            <!-- Ambient Glow -->
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex flex-col items-center text-center mb-6">
+                <div class="w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-3 shadow-lg shadow-indigo-600/20">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold text-white tracking-tight">Sign In to PassForge</h1>
+                <p class="text-xs text-slate-400 mt-1">Access your encrypted credential vault &amp; tool history</p>
+            </div>
+
+            <!-- Flash Error Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-4 flex flex-col gap-2">
+                        {% for category, message in messages %}
+                            <div class="p-3 rounded-xl text-xs font-medium flex items-center gap-2 {% if category == 'error' %}bg-rose-500/10 border border-rose-500/20 text-rose-300{% elif category == 'success' %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-300{% else %}bg-indigo-500/10 border border-indigo-500/20 text-indigo-300{% endif %}">
+                                <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('account.login', next=request.args.get('next')) }}" class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1.5 text-left">
+                    <label for="identifier" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Username or Email</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="identifier" name="identifier" value="{{ identifier|default('') }}" required autofocus
+                               placeholder="your_username or email@domain.com"
+                               class="w-full bg-slate-950/80 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5 text-left">
+                    <label for="password" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Master Password</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="password" id="password" name="password" required
+                               placeholder="••••••••••••"
+                               class="w-full bg-slate-950/80 border border-white/10 rounded-xl py-2.5 pl-10 pr-10 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition">
+                        <button type="button" id="togglePasswordBtn" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition">
+                            <i data-lucide="eye" id="toggleIcon" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-200">
+                        <input type="checkbox" name="remember" checked class="rounded border-white/10 bg-slate-950 text-indigo-600 focus:ring-0">
+                        <span>Remember this device</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 mt-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span>Sign In</span>
+                </button>
+            </form>
+
+            <div class="mt-6 pt-5 border-t border-white/5 text-center text-xs text-slate-400">
+                Don't have an account?
+                <a href="{{ url_for('account.register') }}" class="font-semibold text-indigo-400 hover:text-indigo-300 underline ml-1">Create free vault account</a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const toggleBtn = document.getElementById('togglePasswordBtn');
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggleIcon');
+
+    if (toggleBtn && passwordInput) {
+        toggleBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            toggleIcon.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
+            if (window.lucide) window.lucide.createIcons();
+        });
+    }
+</script>
+{% endblock %}

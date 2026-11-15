@@ -3,6 +3,7 @@
  */
 import { copyToClipboard } from '../shared/clipboard.js';
 import { postJSON } from '../shared/api.js';
+import { showToast } from '../shared/toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const comboUsername = document.getElementById('comboUsername');
@@ -51,6 +52,33 @@ document.addEventListener('DOMContentLoaded', () => {
             generatePair();
         }
     });
+
+    const saveComboVaultBtn = document.getElementById('saveComboVaultBtn');
+    if (saveComboVaultBtn) {
+        saveComboVaultBtn.addEventListener('click', async () => {
+            if (!lastUser || !lastPass) return;
+            const title = prompt('Enter a title or service name for this Account Pair (e.g., AWS, Netflix, Work Portal):');
+            if (!title || !title.trim()) return;
+
+            try {
+                const res = await postJSON('save/vault', {
+                    title: title.trim(),
+                    username_value: lastUser,
+                    password: lastPass,
+                    category: 'account_pair',
+                });
+                if (res.success) {
+                    showToast(res.message || 'Account pair saved to Vault!');
+                }
+            } catch (err) {
+                if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                    showToast('Please log in to save account credentials to your Vault.');
+                } else {
+                    showToast(err.message || 'Failed to save to Vault.');
+                }
+            }
+        });
+    }
 
     generatePair();
 });

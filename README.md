@@ -17,6 +17,8 @@ A complete, extensible multi-page web application built with Python 3, Flask Blu
 | **Hash & Cipher Suite** | `/tools/hash` | One-way message digests (SHA-256, MD5, SHA-512, BLAKE2b), two-way symmetric AES encryption & decryption, and rainbow hash reverse-lookup/cracking. |
 | **Data Breach Checker** | `/tools/breach-checker` | Zero-knowledge password leak audit powered by the Have I Been Pwned API (k-Anonymity SHA-1 prefix model) and email/identity breach exposure search. |
 | **Sinhala Humanizer** | `/tools/sinhala-humanizer` | 100% client-side offline text humanization engine converting robotic AI Sinhala into authentic human prose, with Unicode-to-FM Abhaya font conversion and Madura dictionary. |
+| **My Vault & History** | `/dashboard` | Authenticated user vault: AES-encrypted credentials, Sinhala text history, and security audit activity logs. |
+| **Sign In / Register** | `/login`, `/register` | Flask-Login authentication & user registration with password hashing and session management. |
 | **About & Privacy** | `/about` | Technical architecture details, zero-tracking guarantee, and developer extensibility guide. |
 
 ---
@@ -56,8 +58,11 @@ C:\wamp64\www\password-generator\ (or /opt/lampp/htdocs/password-generator/)
 │   ├── breach_checker/           # Data breach auditor & /api/check-*-breach
 │   │   ├── checker.py
 │   │   └── routes.py
-│   └── sinhala_humanizer/        # Sinhala AI text humanizer & FM Abhaya converter
-│       └── routes.py
+│   ├── sinhala_humanizer/        # Sinhala AI text humanizer & FM Abhaya converter
+│   │   └── routes.py
+│   └── account/                  # Authentication, Vault & History APIs
+│       ├── crypto.py             # Fernet AES credential encryption
+│       └── routes.py             # Login, register, dashboard & /api/save/*
 │
 ├── templates/
 │   ├── base.html                 # Master layout (Navbar, Footer, Toast, CDNs)
@@ -70,6 +75,10 @@ C:\wamp64\www\password-generator\ (or /opt/lampp/htdocs/password-generator/)
 │   │   ├── home.html
 │   │   ├── tools_hub.html
 │   │   └── about.html
+│   ├── account/                  # User account & vault views
+│   │   ├── login.html
+│   │   ├── register.html
+│   │   └── dashboard.html
 │   └── tools/                    # Dedicated tool canvases
 │       ├── _tool_layout.html     # Intermediate layout (breadcrumbs + sidebar mini-nav)
 │       ├── password.html
@@ -117,7 +126,8 @@ C:\wamp64\www\password-generator\ (or /opt/lampp/htdocs/password-generator/)
     ├── test_hash_generator.py
     ├── test_breach_checker.py
     ├── test_models.py            # Unit tests for SQLAlchemy ORM models
-    └── test_routes.py            # Integration test for all 10 pages and 7 APIs
+    ├── test_account.py           # Integration tests for Auth, Vault & History
+    └── test_routes.py            # Integration test for all 12 pages and 12 APIs
 ```
 
 ---
@@ -162,7 +172,7 @@ cd C:\wamp64\www\password-generator
 
 ## 🧪 Running Automated Tests
 
-Run the complete test suite (80 unit and integration tests):
+Run the complete test suite (87 unit and integration tests):
 
 ```powershell
 cd C:\wamp64\www\password-generator

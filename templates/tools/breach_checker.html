@@ -83,6 +83,10 @@
                     <span>SHA-1 Prefix Queried:</span>
                     <strong id="passwordPrefixDisplay" class="px-1.5 py-0.5 rounded bg-white/5 text-cyan-300">-</strong>
                 </span>
+                <button type="button" id="savePasswordBreachResultBtn" class="btn btn-secondary text-xs py-1 px-3 flex items-center gap-1.5" title="Save Audit to Activity History">
+                    <i data-lucide="bookmark" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Save Result</span>
+                </button>
             </div>
         </div>
     </div>
@@ -149,6 +153,13 @@
                     <span>Recommended Security Actions</span>
                 </span>
                 <ul id="remediationList" class="text-xs text-slate-300 flex flex-col gap-1.5 pl-4 list-disc"></ul>
+            </div>
+
+            <div class="flex items-center justify-end pt-2">
+                <button type="button" id="saveEmailBreachResultBtn" class="btn btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5" title="Save Audit to Activity History">
+                    <i data-lucide="bookmark" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Save Result</span>
+                </button>
             </div>
         </div>
     </div>

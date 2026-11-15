@@ -920,3 +920,66 @@ function hideResultStrip() {
 detectApiEndpoint();
 // Periodic health check every 15 seconds
 setInterval(detectApiEndpoint, 15000);
+
+// Save to Account History Handler
+const btnSaveHumanizer = document.getElementById('btn-save-humanizer');
+if (btnSaveHumanizer) {
+  btnSaveHumanizer.addEventListener('click', async () => {
+    const origText = inputText ? inputText.value.trim() : '';
+    const humanizedText = rawHumanizedUnicode || (outputText ? outputText.value.trim() : '');
+
+    if (!origText || !humanizedText) {
+      alert('Please enter Sinhala text and humanize it before saving.');
+      return;
+    }
+
+    let fmText = '';
+    if (typeof window.convertUnicodeToFm === 'function') {
+      try {
+        fmText = window.convertUnicodeToFm(humanizedText);
+      } catch (e) {
+        fmText = '';
+      }
+    }
+
+    let score = null;
+    if (lastAnalysisResult && lastAnalysisResult.overallRisk !== undefined) {
+      score = parseFloat(lastAnalysisResult.overallRisk) / 100.0;
+    }
+
+    // Determine base path for save endpoint
+    const metaTag = document.querySelector('meta[name="base-path"]') || document.querySelector('meta[name="base-url"]');
+    let basePath = metaTag && metaTag.content !== undefined ? metaTag.content.replace(/\/+$/, '') : '';
+    if (!basePath && typeof window !== 'undefined' && window.location && window.location.pathname) {
+      const match = window.location.pathname.match(/^(.*?)(?:\/(?:tools|about|api))(?:\/|$)/i);
+      if (match && match[1]) basePath = match[1].replace(/\/+$/, '');
+    }
+    const saveUrl = `${basePath}/api/save/humanizer`;
+
+    try {
+      const resp = await fetch(saveUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: currentMode,
+          original_text: origText,
+          humanized_text: humanizedText,
+          fm_abhaya_text: fmText,
+          ai_score: score,
+        }),
+      });
+      const data = await resp.json();
+      if (data.success) {
+        alert(data.message || 'Saved to Sinhala Humanizer history!');
+      } else {
+        if (resp.status === 401 || (data.error && data.error.includes('Authentication required'))) {
+          alert('Please log in to save text to your history.');
+        } else {
+          alert(data.error || 'Failed to save.');
+        }
+      }
+    } catch (err) {
+      alert('Failed to save to history.');
+    }
+  });
+}

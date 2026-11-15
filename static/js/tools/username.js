@@ -3,6 +3,7 @@
  */
 import { copyToClipboard } from '../shared/clipboard.js';
 import { postJSON } from '../shared/api.js';
+import { showToast } from '../shared/toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const usernameDisplay = document.getElementById('usernameDisplay');
@@ -146,6 +147,34 @@ document.addEventListener('DOMContentLoaded', () => {
     copyUsernameBtn.addEventListener('click', () => {
         if (currentUsernames.length > 0) copyToClipboard(currentUsernames[0].username);
     });
+
+    const saveUsernameVaultBtn = document.getElementById('saveUsernameVaultBtn');
+    if (saveUsernameVaultBtn) {
+        saveUsernameVaultBtn.addEventListener('click', async () => {
+            if (!currentUsernames.length) return;
+            const uname = currentUsernames[0].username;
+            const title = prompt('Enter a title or service name for this username (e.g., Discord, Reddit):');
+            if (!title || !title.trim()) return;
+
+            try {
+                const res = await postJSON('save/vault', {
+                    title: title.trim(),
+                    username_value: uname,
+                    password: '',
+                    category: 'username',
+                });
+                if (res.success) {
+                    showToast(res.message || 'Saved to Vault!');
+                }
+            } catch (err) {
+                if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                    showToast('Please log in to save usernames to your Vault.');
+                } else {
+                    showToast(err.message || 'Failed to save to Vault.');
+                }
+            }
+        });
+    }
 
     refreshUsernameBtn.addEventListener('click', generateUsername);
 

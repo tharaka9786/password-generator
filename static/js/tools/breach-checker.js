@@ -4,6 +4,7 @@
  */
 
 import { postJSON } from '../shared/api.js';
+import { showToast } from '../shared/toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
@@ -50,6 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const passSource = document.getElementById('passwordSourceDisplay');
     const passPrefix = document.getElementById('passwordPrefixDisplay');
     const samplePasses = document.querySelectorAll('.sample-pass');
+    const savePasswordBreachResultBtn = document.getElementById('savePasswordBreachResultBtn');
+
+    let lastPasswordAudit = null;
+    let lastEmailAudit = null;
 
     // Toggle password mask
     toggleMaskBtn.addEventListener('click', () => {
@@ -95,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderPasswordResult(data) {
+        lastPasswordAudit = data;
         passResultCard.classList.remove('hidden');
 
         const isClean = !data.breached;
@@ -201,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderEmailResult(data) {
+        lastEmailAudit = data;
         emailResultCard.classList.remove('hidden');
 
         const count = data.breach_count || 0;
@@ -292,4 +299,63 @@ document.addEventListener('DOMContentLoaded', () => {
     emailInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') auditEmail(emailInput.value);
     });
+
+    if (savePasswordBreachResultBtn) {
+        savePasswordBreachResultBtn.addEventListener('click', async () => {
+            if (!lastPasswordAudit) {
+                showToast('Please audit a password first.');
+                return;
+            }
+            try {
+                const count = lastPasswordAudit.breach_count || 0;
+                const statusStr = lastPasswordAudit.breached
+                    ? `LEAKED: Found in ${count.toLocaleString()} breaches (${lastPasswordAudit.severity} exposure)`
+                    : 'CLEAN: Zero known breach occurrences (k-Anonymity)';
+                const res = await postJSON('save/activity', {
+                    tool_name: 'breach_checker',
+                    input_summary: `Password leak audit (SHA-1 prefix: ${lastPasswordAudit.sha1_prefix || 'N/A'})`,
+                    result_summary: statusStr,
+                });
+                if (res.success) {
+                    showToast(res.message || 'Saved to activity history!');
+                }
+            } catch (err) {
+                if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                    showToast('Please log in to save breach audits to your history.');
+                } else {
+                    showToast(err.message || 'Failed to save audit.');
+                }
+            }
+        });
+    }
+
+    const saveEmailBreachResultBtn = document.getElementById('saveEmailBreachResultBtn');
+    if (saveEmailBreachResultBtn) {
+        saveEmailBreachResultBtn.addEventListener('click', async () => {
+            if (!lastEmailAudit) {
+                showToast('Please search an email address first.');
+                return;
+            }
+            try {
+                const count = lastEmailAudit.breach_count || 0;
+                const statusStr = lastEmailAudit.breached
+                    ? `COMPROMISED: Exposed in ${count} breaches (${(lastEmailAudit.compromised_data || []).join(', ')})`
+                    : 'SAFE: No known corporate breach leaks found';
+                const res = await postJSON('save/activity', {
+                    tool_name: 'breach_checker',
+                    input_summary: `Email breach check: ${lastEmailAudit.email}`,
+                    result_summary: statusStr,
+                });
+                if (res.success) {
+                    showToast(res.message || 'Saved to activity history!');
+                }
+            } catch (err) {
+                if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                    showToast('Please log in to save breach audits to your history.');
+                } else {
+                    showToast(err.message || 'Failed to save audit.');
+                }
+            }
+        });
+    }
 });

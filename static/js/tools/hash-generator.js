@@ -3,6 +3,7 @@
  */
 import { copyToClipboard } from '../shared/clipboard.js';
 import { postJSON } from '../shared/api.js';
+import { showToast } from '../shared/toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------
@@ -90,6 +91,37 @@ document.addEventListener('DOMContentLoaded', () => {
             copyToClipboard(formatted, 'Copied all computed digests!');
         }
     });
+
+    const saveHashResultBtn = document.getElementById('saveHashResultBtn');
+    if (saveHashResultBtn) {
+        saveHashResultBtn.addEventListener('click', async () => {
+            const raw = textInput ? textInput.value : '';
+            if (!raw || Object.keys(currentHashes).length === 0) {
+                showToast('Please enter text to compute hashes first.');
+                return;
+            }
+
+            const inputSummary = `Text length: ${raw.length} chars (${raw.slice(0, 30)}${raw.length > 30 ? '...' : ''})`;
+            const resultSummary = `SHA-256: ${currentHashes.sha256 || '-'} | MD5: ${currentHashes.md5 || '-'}`;
+
+            try {
+                const res = await postJSON('save/activity', {
+                    tool_name: 'hash_generator',
+                    input_summary: inputSummary,
+                    result_summary: resultSummary,
+                });
+                if (res.success) {
+                    showToast(res.message || 'Saved to activity history!');
+                }
+            } catch (err) {
+                if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                    showToast('Please log in to save hash results to your history.');
+                } else {
+                    showToast(err.message || 'Failed to save to activity history.');
+                }
+            }
+        });
+    }
 
     // -------------------------------------------------------------
     // MODE 2: TWO-WAY CIPHER (ENCRYPT & DECRYPT)

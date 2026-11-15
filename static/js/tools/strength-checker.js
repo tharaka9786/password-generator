@@ -2,6 +2,7 @@
  * Password Strength Checker Tool Script
  */
 import { postJSON } from '../shared/api.js';
+import { showToast } from '../shared/toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('checkInput');
@@ -21,8 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const findingsList = document.getElementById('findingsList');
     const tipsList = document.getElementById('tipsList');
+    const saveStrengthResultBtn = document.getElementById('saveStrengthResultBtn');
 
     let debounceTimer = null;
+    let lastAudit = null;
+    let lastPassword = '';
 
     toggleMaskBtn.addEventListener('click', () => {
         if (input.type === 'password') {
@@ -70,11 +74,38 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const data = await postJSON('check-strength', { password: pwd });
             if (data.success && data.analysis) {
+                lastAudit = data.analysis;
+                lastPassword = pwd;
                 renderAudit(data.analysis);
             }
         } catch (err) {
             console.error('Audit failed:', err);
         }
+    }
+
+    if (saveStrengthResultBtn) {
+        saveStrengthResultBtn.addEventListener('click', async () => {
+            if (!lastAudit || !lastPassword) {
+                showToast('Please type a password to audit first.');
+                return;
+            }
+            try {
+                const res = await postJSON('save/activity', {
+                    tool_name: 'strength_checker',
+                    input_summary: `Password audit (len ${lastPassword.length})`,
+                    result_summary: `${lastAudit.label} (${lastAudit.entropy} bits entropy, crack time: ${lastAudit.crack_time})`,
+                });
+                if (res.success) {
+                    showToast(res.message || 'Audit saved to activity history!');
+                }
+            } catch (err) {
+                if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                    showToast('Please log in to save audits to your history.');
+                } else {
+                    showToast(err.message || 'Failed to save audit.');
+                }
+            }
+        });
     }
 
     function renderAudit(a) {

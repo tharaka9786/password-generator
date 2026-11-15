@@ -3,6 +3,7 @@
  */
 import { copyToClipboard } from '../shared/clipboard.js';
 import { postJSON } from '../shared/api.js';
+import { showToast } from '../shared/toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const passwordDisplay = document.getElementById('passwordDisplay');
@@ -175,6 +176,33 @@ document.addEventListener('DOMContentLoaded', () => {
     copyBtn.addEventListener('click', () => {
         if (currentPasswords.length > 0) copyToClipboard(currentPasswords[0].password);
     });
+
+    const saveVaultBtn = document.getElementById('saveVaultBtn');
+    if (saveVaultBtn) {
+        saveVaultBtn.addEventListener('click', async () => {
+            if (!currentPasswords.length) return;
+            const pw = currentPasswords[0].password;
+            const title = prompt('Enter a title or account name for this password (e.g., GitHub, Work Email):');
+            if (!title || !title.trim()) return;
+
+            try {
+                const res = await postJSON('save/vault', {
+                    title: title.trim(),
+                    password: pw,
+                    category: 'password',
+                });
+                if (res.success) {
+                    showToast(res.message || 'Saved to Vault!');
+                }
+            } catch (err) {
+                if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                    showToast('Please log in to save passwords to your Vault.');
+                } else {
+                    showToast(err.message || 'Failed to save to Vault.');
+                }
+            }
+        });
+    }
 
     refreshBtn.addEventListener('click', generatePassword);
 

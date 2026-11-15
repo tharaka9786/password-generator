@@ -25,6 +25,7 @@ class TestRoutes(unittest.TestCase):
             ("/tools/strength-checker", b"Strength"),
             ("/tools/hash", b"Hash Generator"),
             ("/tools/breach-checker", b"Data Breach"),
+            ("/tools/sinhala-humanizer", b"Sinhala Humanizer"),
         ]
         for route, expected_text in routes:
             with self.subTest(route=route):
@@ -117,6 +118,12 @@ class TestRoutes(unittest.TestCase):
         self.assertTrue(data["success"])
         self.assertTrue(data["data"]["found"])
         self.assertEqual(data["data"]["plaintext"], "password")
+
+    def test_sinhala_humanizer_page(self):
+        response = self.client.get("/tools/sinhala-humanizer")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Sinhala Humanizer", response.data)
+        self.assertIn(b"offlineEngineBundle.js", response.data)
 
 
 if __name__ == "__main__":

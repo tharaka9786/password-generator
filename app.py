@@ -22,6 +22,7 @@ from blueprints.username.routes import username_bp
 from blueprints.strength_checker.routes import strength_bp
 from blueprints.hash_generator.routes import hash_bp
 from blueprints.breach_checker.routes import breach_bp
+from blueprints.sinhala_humanizer.routes import humanizer_bp
 from blueprints.translations import (
     DEFAULT_LANGUAGE,
     SUPPORTED_LANGUAGES,
@@ -46,6 +47,7 @@ def create_app() -> Flask:
     app.register_blueprint(strength_bp)
     app.register_blueprint(hash_bp)
     app.register_blueprint(breach_bp)
+    app.register_blueprint(humanizer_bp)
 
     def get_current_lang() -> str:
         if has_request_context():

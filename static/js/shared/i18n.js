@@ -33,6 +33,8 @@ export const TRANSLATIONS = {
         "tool.hash.desc": "Compute instant cryptographic hashes including MD5, SHA-1, SHA-256, SHA-512, and BLAKE2b digests.",
         "tool.breach.title": "Data Breach Checker",
         "tool.breach.desc": "Check if your passwords or email accounts have been compromised in corporate breaches using zero-knowledge k-Anonymity.",
+        "tool.humanizer.title": "Sinhala Humanizer",
+        "tool.humanizer.desc": "Convert robotic AI Sinhala into natural, authentic human prose with 100% client-side offline engine & FM Abhaya converter.",
 
         // Common Actions & Labels
         "action.copy": "Copy",
@@ -132,6 +134,8 @@ export const TRANSLATIONS = {
         "tool.hash.desc": "MD5, SHA-1, SHA-256, SHA-512, සහ BLAKE2b ඇතුළු ක්ෂණික ගුප්ත ලේඛන හෑෂ් ගණනය කරන්න.",
         "tool.breach.title": "දත්ත කාන්දුවීම් පරීක්ෂකය",
         "tool.breach.desc": "බිංදු-දැනුම k-Anonymity තාක්ෂණයෙන් ඔබේ මුරපද හෝ ඊමේල් ගිණුම් සමාගම් දත්ත කාන්දුවීම්වලට හසුවී ඇත්දැයි පරීක්ෂා කරන්න.",
+        "tool.humanizer.title": "සිංහල AI හියුමනයිසර්",
+        "tool.humanizer.desc": "100% නොබැඳි (offline) එන්ජිම සහ FM Abhaya පරිවර්තකය සමඟ කෘත්‍රිම AI සිංහල පාඨ ස්වභාවික මානව ශෛලියට පරිවර්තනය කරන්න.",
 
         // Common Actions & Labels
         "action.copy": "පිටපත්",

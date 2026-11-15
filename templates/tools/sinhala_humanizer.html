@@ -1,0 +1,267 @@
+{% extends "tools/_tool_layout.html" %}
+
+{% block title %}Sinhala AI Text Humanizer v2.0 — PassForge Security Suite{% endblock %}
+{% block tool_name %}<span data-i18n="tool.humanizer.title">{{ t('tool.humanizer.title') }}</span>{% endblock %}
+{% block tool_title %}<span data-i18n="tool.humanizer.title">{{ t('tool.humanizer.title') }}</span>{% endblock %}
+{% block tool_subtitle %}<span data-i18n="tool.humanizer.desc">{{ t('tool.humanizer.desc') }}</span>{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='humanizer/style.css') }}">
+<style>
+    /* Expand tool container width to support side-by-side humanizer workspaces */
+    .tool-layout-container { max-width: 1360px !important; }
+    .tool-main-panel { max-width: 100% !important; }
+</style>
+{% endblock %}
+
+{% block tool_canvas %}
+<div class="humanizer-workspace">
+    <div class="app-layout">
+        <!-- Humanizer Toolbar (Mode Selector + Offline Engine Status) -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-indigo-400"></i>
+                    </div>
+                    <span class="brand-name font-semibold text-slate-100">Sinhala Humanizer</span>
+                    <span class="brand-pill">v2.0 • 100% Offline හෙළ සිංහල</span>
+                </div>
+            </div>
+
+            <div class="topbar-center">
+                <div class="segmented-control" role="tablist">
+                    <button type="button" class="segment-btn active" data-mode="academic" role="tab" aria-selected="true">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                            <path d="M6 6h10"/>
+                            <path d="M6 10h10"/>
+                        </svg>
+                        <span>Academic Research</span>
+                    </button>
+                    <button type="button" class="segment-btn" data-mode="general" role="tab" aria-selected="false">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <span>General Writing</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <div class="status-indicator" id="server-status">
+                    <span class="status-dot checking"></span>
+                    <span class="status-text">Checking...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace Container -->
+        <main class="main-container">
+            <div class="editor-grid">
+                <!-- Input Card -->
+                <section class="card editor-card input-card">
+                    <div class="card-body">
+                        <textarea
+                            id="input-text"
+                            class="sinhala-input"
+                            placeholder="ඔබේ සිංහල ඡේදය හෝ පර්යේෂණ කොටස මෙතැනට ඇතුළත් කරන්න..."
+                            spellcheck="false"
+                        ></textarea>
+                    </div>
+                    <footer class="card-footer">
+                        <div class="footer-left">
+                            <span id="input-stats" class="meta-label">0 වචන (0 words)</span>
+                        </div>
+                        <div class="footer-right">
+                            <button type="button" id="btn-paste" class="icon-btn" title="Paste text">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                                </svg>
+                                <span>Paste</span>
+                            </button>
+                            <button type="button" id="btn-clear" class="icon-btn" title="Clear text">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 6h18"/>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                                <span>Clear</span>
+                            </button>
+                            <button type="button" id="btn-convert-only" class="icon-btn convert-btn" title="Convert to FM Abhaya directly without AI Humanizer">
+                                <span>Convert Only →</span>
+                            </button>
+                        </div>
+                    </footer>
+                </section>
+
+                <!-- Output Card -->
+                <section class="card editor-card output-card">
+                    <div class="card-body">
+                        <!-- Empty State Placeholder (Clickable to paste or type directly) -->
+                        <div id="output-placeholder" class="empty-state" title="Click anywhere here to paste or type directly">
+                            <div class="empty-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10 9 9 9 8 9"/>
+                                </svg>
+                            </div>
+                            <p class="empty-title">ස්වභාවික මානව ශෛලියෙන් සැකසූ පාඨය මෙහි දිස්වනු ඇත.</p>
+                            <span class="empty-subtitle">Humanized text will appear here. Click to paste or type directly.</span>
+                        </div>
+
+                        <!-- Actual Visible Output Text Container (Editable in Unicode mode) -->
+                        <textarea id="output-text" class="sinhala-output hidden" spellcheck="false" placeholder="සැකසූ සිංහල පාඨය මෙහි දිස්වනු ඇත..."></textarea>
+
+                        <!-- Dual-Font Preview Container (FM Abhaya mode: Sinhala in FMAbhaya + English in Inter) -->
+                        <div id="fm-preview" class="sinhala-output fm-preview hidden" tabindex="0"></div>
+                    </div>
+                    <footer class="card-footer">
+                        <div class="footer-left">
+                            <span id="output-stats" class="meta-label">Ready</span>
+                            <div class="format-segmented-pill" role="tablist" aria-label="Output Font Encoding">
+                                <button type="button" class="format-tab active" data-format="unicode" title="Sinhala Unicode">Unicode</button>
+                                <button type="button" class="format-tab" data-format="fm" title="FM Abhaya Legacy ASCII">FM Abhaya</button>
+                            </div>
+                        </div>
+                        <div class="footer-right">
+                            <button type="button" id="btn-copy" class="icon-btn" title="Copy to clipboard" disabled>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                                </svg>
+                                <span id="copy-label">Copy</span>
+                            </button>
+                            <button type="button" id="btn-download" class="icon-btn" title="Download text" disabled>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                <span>Download</span>
+                            </button>
+                        </div>
+                    </footer>
+                </section>
+            </div>
+
+            <!-- Action Row -->
+            <div class="action-section">
+                <div class="btn-group">
+                    <button type="button" id="btn-analyze" class="btn btn-ghost">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.3-4.3"/>
+                        </svg>
+                        <span>Check AI Score</span>
+                    </button>
+                    <button type="button" id="btn-humanize" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+                        </svg>
+                        <span>Humanize Text</span>
+                    </button>
+                </div>
+
+                <div id="progress-indicator" class="progress-wrap hidden">
+                    <span class="spinner"></span>
+                    <span id="progress-text" class="progress-message">Analyzing Sinhala linguistic structure...</span>
+                </div>
+            </div>
+
+            <!-- Compact Result Strip -->
+            <section id="result-strip" class="result-strip hidden">
+                <div class="strip-header">
+                    <div class="strip-badges">
+                        <div class="stat-pill" id="pill-risk">
+                            <span class="pill-title">AI Detection Risk:</span>
+                            <span class="pill-value" id="val-risk">--</span>
+                            <span class="badge-tag hidden" id="tag-risk">Human</span>
+                        </div>
+                        <div class="stat-pill" id="pill-burstiness">
+                            <span class="pill-title">Natural Flow:</span>
+                            <span class="pill-value" id="val-burstiness">--</span>
+                        </div>
+                        <div class="stat-pill" id="pill-diversity">
+                            <span class="pill-title">MATTR Diversity:</span>
+                            <span class="pill-value" id="val-diversity">--</span>
+                        </div>
+                        <div class="stat-pill" id="pill-paraphrase">
+                            <span class="pill-title">Paraphrase / Parallelism:</span>
+                            <span class="pill-value" id="val-paraphrase">--</span>
+                        </div>
+                        <div class="stat-pill hidden" id="pill-iterations">
+                            <span class="pill-title">Refinement Loops:</span>
+                            <span class="pill-value" id="val-iterations">--</span>
+                        </div>
+                    </div>
+
+                    <div class="strip-toggle">
+                        <button type="button" id="btn-toggle-markers" class="toggle-link hidden">
+                            <span id="toggle-markers-label">Removed AI phrases (0)</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Detection Feedback & Flagged Reasons Note -->
+                <div id="flagged-reasons-note" class="flagged-reasons-note hidden"></div>
+
+                <!-- Collapsible Removed Markers Panel -->
+                <div id="markers-panel" class="markers-panel hidden">
+                    <div class="panel-inner">
+                        <span class="panel-heading">හඳුනාගත් කෘත්‍රිම AI පරිවර්තන සම්බන්ධක (Detected robotic markers):</span>
+                        <div id="markers-container" class="markers-chips"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Floating Glassmorphic Madura Dictionary & Synonym Popover -->
+    <div id="dict-popover" class="dict-popover hidden" role="dialog" aria-label="Madura Offline Dictionary & Synonyms">
+        <div class="popover-header">
+            <div class="popover-title-row">
+                <span class="popover-word" id="dict-popover-word">--</span>
+                <span class="popover-badge">Madura 100% Offline</span>
+            </div>
+            <button type="button" class="popover-close-btn" id="btn-dict-close" title="Close (Esc)">×</button>
+        </div>
+        <div class="popover-body">
+            <div id="popover-loading" class="popover-loading hidden">
+                <span class="popover-spinner"></span>
+                <span>Looking up Madura Dictionary...</span>
+            </div>
+            <div id="popover-content">
+                <div class="popover-section" id="popover-meanings-section">
+                    <span class="section-label">තේරුම (Meanings):</span>
+                    <div class="meanings-list" id="dict-popover-meanings"></div>
+                </div>
+                <div class="popover-section" id="popover-synonyms-section">
+                    <span class="section-label">සමාන පද (Synonyms - Click to replace):</span>
+                    <div class="synonym-chips" id="dict-popover-synonyms"></div>
+                </div>
+            </div>
+            <div id="popover-empty" class="popover-empty hidden">
+                <span>අර්ථ දැක්වීම් හමු නොවීය (No definitions found).</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.HUMANIZER_STATIC_BASE = "{{ url_for('static', filename='humanizer') }}";
+    window.__MADURA_DATA_PATH__ = "{{ url_for('static', filename='humanizer/data') }}";
+</script>
+<script src="{{ url_for('static', filename='humanizer/offlineEngineBundle.js') }}"></script>
+<script src="{{ url_for('static', filename='humanizer/unicodeToFm.js') }}"></script>
+<script src="{{ url_for('static', filename='humanizer/app.js') }}"></script>
+{% endblock %}

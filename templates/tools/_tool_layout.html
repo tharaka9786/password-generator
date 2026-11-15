@@ -43,6 +43,10 @@
                 <i data-lucide="shield-ban" class="w-4 h-4 text-rose-400"></i>
                 <span data-i18n="tool.breach.title">{{ t('tool.breach.title') }}</span>
             </a>
+            <a href="{{ url_for('sinhala_humanizer.sinhala_humanizer_tool') }}" class="sidebar-item {% if active_tool == 'sinhala-humanizer' %}active{% endif %}">
+                <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                <span data-i18n="tool.humanizer.title">{{ t('tool.humanizer.title') }}</span>
+            </a>
         </aside>
 
         <!-- Main Tool Content Canvas -->

@@ -115,6 +115,14 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "en": "Check if your passwords or email accounts have been compromised in corporate breaches using zero-knowledge k-Anonymity.",
         "si": "බිංදු-දැනුම k-Anonymity තාක්ෂණයෙන් ඔබේ මුරපද හෝ ඊමේල් ගිණුම් සමාගම් දත්ත කාන්දුවීම්වලට හසුවී ඇත්දැයි පරීක්ෂා කරන්න.",
     },
+    "tool.humanizer.title": {
+        "en": "Sinhala Humanizer",
+        "si": "සිංහල AI හියුමනයිසර්",
+    },
+    "tool.humanizer.desc": {
+        "en": "Convert robotic AI Sinhala into natural, authentic human prose with 100% client-side offline engine & FM Abhaya converter.",
+        "si": "100% නොබැඳි (offline) එන්ජිම සහ FM Abhaya පරිවර්තකය සමඟ කෘත්‍රිම AI සිංහල පාඨ ස්වභාවික මානව ශෛලියට පරිවර්තනය කරන්න.",
+    },
 
     # -------------------------------------------------------------
     # Common Actions & Badges
@@ -502,5 +510,18 @@ def get_localized_tools_catalog(lang: str = "en") -> List[Dict[str, Any]]:
             "endpoint": "breach_checker.breach_checker_tool",
             "badge": "සජීවී විගණනය" if is_si else "Live Audit",
             "tags": ["ආරක්ෂාව", "කාන්දුවීම්", "HIBP", "පෞද්ගලිකත්වය"] if is_si else ["Security", "Breach", "HIBP", "Privacy"],
+        },
+        {
+            "id": "sinhala-humanizer",
+            "title": "සිංහල AI හියුමනයිසර්" if is_si else "Sinhala Humanizer",
+            "description": (
+                "100% නොබැඳි (offline) එන්ජිම සහ FM Abhaya පරිවර්තකය සමඟ කෘත්‍රිම AI සිංහල පාඨ ස්වභාවික මානව ශෛලියට පරිවර්තනය කරන්න."
+                if is_si else
+                "Convert robotic AI Sinhala into natural, authentic human prose with 100% client-side offline engine & FM Abhaya converter."
+            ),
+            "icon": "sparkles",
+            "endpoint": "sinhala_humanizer.sinhala_humanizer_tool",
+            "badge": "100% නොබැඳි" if is_si else "100% Offline",
+            "tags": ["සිංහල", "AI Humanizer", "FM Abhaya", "නොබැඳි"] if is_si else ["Sinhala", "AI Humanizer", "FM Abhaya", "Offline"],
         },
     ]

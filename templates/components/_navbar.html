@@ -49,6 +49,10 @@
                         <i data-lucide="shield-ban" class="w-4 h-4 text-rose-400"></i>
                         <span data-i18n="tool.breach.title">{{ t('tool.breach.title') }}</span>
                     </a>
+                    <a href="{{ url_for('sinhala_humanizer.sinhala_humanizer_tool') }}" class="dropdown-item" role="menuitem">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                        <span data-i18n="tool.humanizer.title">{{ t('tool.humanizer.title') }}</span>
+                    </a>
                 </div>
             </div>
 
@@ -115,6 +119,10 @@
         <a href="{{ url_for('breach_checker.breach_checker_tool') }}" class="dropdown-item">
             <i data-lucide="shield-ban" class="w-4 h-4 text-rose-400"></i>
             <span data-i18n="tool.breach.title">{{ t('tool.breach.title') }}</span>
+        </a>
+        <a href="{{ url_for('sinhala_humanizer.sinhala_humanizer_tool') }}" class="dropdown-item">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+            <span data-i18n="tool.humanizer.title">{{ t('tool.humanizer.title') }}</span>
         </a>
         <a href="{{ url_for('pages.about') }}" class="dropdown-item">
             <i data-lucide="info" class="w-4 h-4"></i>

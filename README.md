@@ -16,6 +16,7 @@ A complete, extensible multi-page web application built with Python 3, Flask Blu
 | **Strength Checker** | `/tools/strength-checker` | Real-time passkey vulnerability auditor evaluating Shannon entropy, composition breakdown, pattern detection, and GPU brute-force time. |
 | **Hash & Cipher Suite** | `/tools/hash` | One-way message digests (SHA-256, MD5, SHA-512, BLAKE2b), two-way symmetric AES encryption & decryption, and rainbow hash reverse-lookup/cracking. |
 | **Data Breach Checker** | `/tools/breach-checker` | Zero-knowledge password leak audit powered by the Have I Been Pwned API (k-Anonymity SHA-1 prefix model) and email/identity breach exposure search. |
+| **Sinhala Humanizer** | `/tools/sinhala-humanizer` | 100% client-side offline text humanization engine converting robotic AI Sinhala into authentic human prose, with Unicode-to-FM Abhaya font conversion and Madura dictionary. |
 | **About & Privacy** | `/about` | Technical architecture details, zero-tracking guarantee, and developer extensibility guide. |
 
 ---
@@ -49,8 +50,10 @@ C:\wamp64\www\password-generator\ (or /opt/lampp/htdocs/password-generator/)
 │   ├── hash_generator/           # Cryptographic digest logic & /api/generate-hash
 │   │   ├── hasher.py
 │   │   └── routes.py
-│   └── breach_checker/           # Data breach auditor & /api/check-*-breach
-│       ├── checker.py
+│   ├── breach_checker/           # Data breach auditor & /api/check-*-breach
+│   │   ├── checker.py
+│   │   └── routes.py
+│   └── sinhala_humanizer/        # Sinhala AI text humanizer & FM Abhaya converter
 │       └── routes.py
 │
 ├── templates/
@@ -71,7 +74,8 @@ C:\wamp64\www\password-generator\ (or /opt/lampp/htdocs/password-generator/)
 │       ├── account_pair.html
 │       ├── strength_checker.html
 │       ├── hash_generator.html
-│       └── breach_checker.html
+│       ├── breach_checker.html
+│       └── sinhala_humanizer.html
 │
 ├── static/
 │   ├── css/
@@ -91,6 +95,15 @@ C:\wamp64\www\password-generator\ (or /opt/lampp/htdocs/password-generator/)
 │   │       ├── strength-checker.js
 │   │       ├── hash-generator.js
 │   │       └── breach-checker.js
+│   ├── humanizer/                # Offline Sinhala humanizer engine & assets
+│   │   ├── app.js                # Humanizer UI controller & base-path resolver
+│   │   ├── offlineEngineBundle.js # Bundled offline NLP analysis engine
+│   │   ├── unicodeToFm.js        # Real-time Unicode to FM Abhaya converter
+│   │   ├── style.css             # Scoped Humanizer workspace styling
+│   │   ├── fonts/FMAbhaya.ttf    # Sinhala FM font asset
+│   │   └── data/                 # Madura dictionary lookup datasets
+│   │       ├── en2sn.json
+│   │       └── sn2en.json
 │   └── img/
 │       └── favicon.svg           # Scalable SVG site favicon
 │
@@ -100,7 +113,7 @@ C:\wamp64\www\password-generator\ (or /opt/lampp/htdocs/password-generator/)
     ├── test_strength_checker.py
     ├── test_hash_generator.py
     ├── test_breach_checker.py
-    └── test_routes.py            # Integration test for all 9 pages and 7 APIs
+    └── test_routes.py            # Integration test for all 10 pages and 7 APIs
 ```
 
 ---
@@ -145,7 +158,7 @@ cd C:\wamp64\www\password-generator
 
 ## 🧪 Running Automated Tests
 
-Run the complete test suite (75 unit and integration tests):
+Run the complete test suite (76 unit and integration tests):
 
 ```powershell
 cd C:\wamp64\www\password-generator

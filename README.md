@@ -34,9 +34,12 @@ C:\wamp64\www\password-generator\ (or /opt/lampp/htdocs/password-generator/)
 │
 ├── deploy/                       # Cloud deployment automation
 │   ├── pythonanywhere_wsgi.py    # PythonAnywhere WSGI configuration
-│   └── setup_pa.sh               # Automated PythonAnywhere setup script
+│   ├── setup_pa.sh               # Automated PythonAnywhere setup script
+│   ├── schema_mysql.sql          # Raw MySQL DDL schema (utf8mb4_unicode_ci)
+│   └── init_db.py                # Database initializer & verification script
 │
 ├── app.py                        # Flask App Factory + Blueprint registrations
+├── models.py                     # SQLAlchemy ORM models (User, Vault, History)
 ├── generator.py                  # Core password generator & CLI
 ├── username_generator.py         # Core username generator & CLI
 │
@@ -113,6 +116,7 @@ C:\wamp64\www\password-generator\ (or /opt/lampp/htdocs/password-generator/)
     ├── test_strength_checker.py
     ├── test_hash_generator.py
     ├── test_breach_checker.py
+    ├── test_models.py            # Unit tests for SQLAlchemy ORM models
     └── test_routes.py            # Integration test for all 10 pages and 7 APIs
 ```
 
@@ -158,7 +162,7 @@ cd C:\wamp64\www\password-generator
 
 ## 🧪 Running Automated Tests
 
-Run the complete test suite (76 unit and integration tests):
+Run the complete test suite (80 unit and integration tests):
 
 ```powershell
 cd C:\wamp64\www\password-generator

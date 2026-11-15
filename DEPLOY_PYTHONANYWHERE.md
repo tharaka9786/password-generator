@@ -125,7 +125,32 @@ In the **Static files** section of the Web tab, add the following mapping:
 
 ---
 
-### Step 7: Reload and Test
+### Step 7: Configure Database (MySQL / SQLite)
+
+PassForge supports both MySQL and SQLite. On PythonAnywhere:
+
+#### Option A: Using PythonAnywhere MySQL (Recommended)
+1. Go to the **Databases** tab on the PythonAnywhere dashboard.
+2. Initialize MySQL by setting your database password.
+3. Under **Create a database**, name it `passforge_db` (PythonAnywhere will create `<YOUR_USERNAME>$passforge_db`).
+4. Edit `/home/<YOUR_USERNAME>/password-generator/.env` to configure `DATABASE_URL`:
+   ```text
+   DATABASE_URL=mysql+pymysql://<YOUR_USERNAME>:<YOUR_PASSWORD>@<YOUR_USERNAME>.mysql.pythonanywhere-services.com/<YOUR_USERNAME>$passforge_db?charset=utf8mb4
+   ```
+5. In a Bash console, initialize the schema:
+   ```bash
+   cd ~/password-generator
+   source .venv/bin/activate
+   python deploy/init_db.py
+   ```
+   *(Alternatively, you can run the SQL schema file directly in the MySQL console: `source deploy/schema_mysql.sql;`)*
+
+#### Option B: Using SQLite (Default Fallback)
+If `DATABASE_URL` is omitted from `.env`, PassForge automatically falls back to an internal SQLite database file (`sqlite:///passforge_fallback.db`).
+
+---
+
+### Step 8: Reload and Test
 
 1. Scroll to the top of the **Web** tab.
 2. Click the green button: **Reload <YOUR_USERNAME>.pythonanywhere.com**.

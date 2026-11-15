@@ -29,6 +29,7 @@ from blueprints.translations import (
     get_localized_tools_catalog,
     get_translation,
 )
+from models import db
 
 
 def create_app() -> Flask:
@@ -39,6 +40,17 @@ def create_app() -> Flask:
     app.config["SECRET_KEY"] = os.environ.get(
         "SECRET_KEY", "passforge-dev-secret-key-change-in-production"
     )
+
+    # Database configuration
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
+        app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///passforge_fallback.db"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    # Initialize database
+    db.init_app(app)
 
     # Register Blueprints
     app.register_blueprint(pages_bp)

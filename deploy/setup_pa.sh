@@ -56,15 +56,21 @@ pip install -r requirements.txt
 if [ ! -f ".env" ]; then
     echo "[+] Creating .env from .env.example..."
     cp .env.example .env
-    # Generate a random secret key for Flask sessions
+    # Generate random keys for Flask sessions and Fernet vault encryption
     RANDOM_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
+    RANDOM_VAULT_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
     sed -i "s/SECRET_KEY=change-this-to-a-secure-random-secret-key/SECRET_KEY=${RANDOM_KEY}/" .env 2>/dev/null || true
-    echo "[+] Generated random Flask SECRET_KEY in .env."
+    sed -i "s/VAULT_ENCRYPTION_KEY=your_fernet_key_here/VAULT_ENCRYPTION_KEY=${RANDOM_VAULT_KEY}/" .env 2>/dev/null || true
+    echo "[+] Generated random Flask SECRET_KEY and VAULT_ENCRYPTION_KEY in .env."
 fi
 
 # 7. Run smoke import test
 echo "[+] Verifying application import..."
 python -c "from app import app; print('✓ PassForge application factory and blueprints loaded successfully!')"
+
+# 8. Initialize database schema
+echo "[+] Initializing database schema (deploy/init_db.py)..."
+python deploy/init_db.py || echo "[!] Note: Ensure DATABASE_URL is configured in .env for MySQL initialization."
 
 echo ""
 echo "========================================================"
@@ -73,5 +79,6 @@ echo " 1. Go to the 'Web' tab in PythonAnywhere dashboard."
 echo " 2. Set 'Virtualenv' path to: ${PROJECT_ROOT}/.venv"
 echo " 3. Update 'WSGI configuration file' using deploy/pythonanywhere_wsgi.py"
 echo " 4. Set Static files mapping: /static/ -> ${PROJECT_ROOT}/static"
-echo " 5. Click the green 'Reload' button."
+echo " 5. If using MySQL on PythonAnywhere, configure DATABASE_URL in .env and run: python deploy/init_db.py"
+echo " 6. Click the green 'Reload' button."
 echo "========================================================"

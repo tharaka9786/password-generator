@@ -1,0 +1,13 @@
+<footer class="site-footer">
+    <div class="footer-container">
+        <div>
+            <span class="font-semibold text-slate-200" data-i18n="footer.built_with">{{ t('footer.built_with') }}</span>
+            <p class="text-xs text-slate-400 mt-1" data-i18n="footer.tagline">{{ t('footer.tagline') }}</p>
+        </div>
+        <div class="footer-links">
+            <a href="{{ url_for('pages.home') }}" class="hover:text-slate-200 transition" data-i18n="footer.home">{{ t('footer.home') }}</a>
+            <a href="{{ url_for('pages.tools_hub') }}" class="hover:text-slate-200 transition" data-i18n="footer.tools_hub">{{ t('footer.tools_hub') }}</a>
+            <a href="{{ url_for('pages.about') }}" class="hover:text-slate-200 transition" data-i18n="footer.about_privacy">{{ t('footer.about_privacy') }}</a>
+        </div>
+    </div>
+</footer>

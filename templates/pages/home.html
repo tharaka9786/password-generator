@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% import "components/_tool_card.html" as cards %}
+
+{% block title %}PassForge — Cryptographically Secure Passwords & Tools{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-5 py-12 md:py-20 flex flex-col gap-16 md:gap-24">
+    <!-- Hero Section -->
+    <section class="flex flex-col items-center text-center gap-6">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs md:text-sm font-semibold tracking-wide">
+            <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
+            <span data-i18n="home.badge">{{ t('home.badge') }}</span>
+        </div>
+
+        <h1 class="text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight max-w-3xl leading-tight">
+            <span data-i18n="home.hero_title">{{ t('home.hero_title') }}</span> <span class="bg-gradient-to-r from-indigo-400 via-sky-400 to-emerald-400 bg-clip-text text-transparent" data-i18n="home.hero_gradient">{{ t('home.hero_gradient') }}</span>
+        </h1>
+
+        <p class="text-slate-400 text-base md:text-lg max-w-2xl leading-relaxed" data-i18n="home.hero_subtitle">
+            {{ t('home.hero_subtitle') }}
+        </p>
+
+        <!-- Quick Demo Generator Widget -->
+        <div class="w-full max-w-xl mt-4 bg-slate-900/80 border border-white/10 rounded-2xl p-5 md:p-6 shadow-2xl backdrop-blur-xl flex flex-col gap-4">
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <span data-i18n="home.quick_generator">{{ t('home.quick_generator') }}</span>
+                <span id="homeEntropyBadge" class="text-cyan-400 font-mono">103.4 bits entropy</span>
+            </div>
+
+            <div class="flex items-center justify-between gap-3 bg-slate-950 border border-white/10 rounded-xl px-4 py-3">
+                <span id="homePasswordDisplay" class="font-mono text-lg md:text-xl text-sky-400 font-semibold tracking-wide break-all">Generating...</span>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button id="homeCopyBtn" class="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center gap-1.5 text-xs font-semibold px-3 py-2">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span data-i18n="action.copy">{{ t('action.copy') }}</span>
+                    </button>
+                    <button id="homeRefreshBtn" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition">
+                        <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-slate-400">
+                <span class="flex items-center gap-1.5 text-emerald-400 font-medium">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    <span data-i18n="home.csprng_validated">{{ t('home.csprng_validated') }}</span>
+                </span>
+                <a href="{{ url_for('password.password_tool') }}" class="text-indigo-400 hover:text-indigo-300 font-medium inline-flex items-center gap-1 transition">
+                    <span data-i18n="home.full_customizer">{{ t('home.full_customizer') }}</span>
+                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-4 mt-2">
+            <a href="{{ url_for('pages.tools_hub') }}" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+                <i data-lucide="wrench" class="w-4 h-4"></i>
+                <span data-i18n="home.explore_all">{{ t('home.explore_all') }}</span>
+            </a>
+            <a href="{{ url_for('pages.about') }}" class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 font-semibold text-sm transition flex items-center gap-2">
+                <i data-lucide="info" class="w-4 h-4"></i>
+                <span data-i18n="home.how_it_works">{{ t('home.how_it_works') }}</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Featured Tools Grid -->
+    <section class="flex flex-col gap-8">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h2 class="text-2xl md:text-3xl font-bold text-white" data-i18n="home.essential_tools">{{ t('home.essential_tools') }}</h2>
+                <p class="text-slate-400 text-sm mt-1" data-i18n="home.essential_subtitle">{{ t('home.essential_subtitle') }}</p>
+            </div>
+            <a href="{{ url_for('pages.tools_hub') }}" class="text-indigo-400 hover:text-indigo-300 text-sm font-semibold inline-flex items-center gap-1.5 transition">
+                <span data-i18n="home.view_all">{{ t('home.view_all') }}</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for tool in tools %}
+            {{ cards.render_tool_card(tool) }}
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Value Propositions -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-white/5">
+        <div class="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                <i data-lucide="cpu" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-semibold text-white" data-i18n="home.prop1_title">{{ t('home.prop1_title') }}</h3>
+            <p class="text-xs text-slate-400 leading-relaxed" data-i18n="home.prop1_desc">{{ t('home.prop1_desc') }}</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                <i data-lucide="shield-off" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-semibold text-white" data-i18n="home.prop2_title">{{ t('home.prop2_title') }}</h3>
+            <p class="text-xs text-slate-400 leading-relaxed" data-i18n="home.prop2_desc">{{ t('home.prop2_desc') }}</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col gap-3">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+                <i data-lucide="blocks" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-semibold text-white" data-i18n="home.prop3_title">{{ t('home.prop3_title') }}</h3>
+            <p class="text-xs text-slate-400 leading-relaxed" data-i18n="home.prop3_desc">{{ t('home.prop3_desc') }}</p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="{{ url_for('static', filename='js/pages/home.js') }}"></script>
+{% endblock %}

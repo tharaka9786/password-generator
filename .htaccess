@@ -1,0 +1,13 @@
+Options +ExecCGI +FollowSymLinks
+AddHandler cgi-script .cgi .py
+DirectoryIndex index.cgi index.html
+
+RewriteEngine On
+RewriteBase /password-generator/
+
+# Serve existing static files directly from Apache
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Route all application endpoints to index.cgi
+RewriteRule ^(.*)$ index.cgi/$1 [L,QSA]

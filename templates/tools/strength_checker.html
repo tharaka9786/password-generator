@@ -1,0 +1,83 @@
+{% extends "tools/_tool_layout.html" %}
+
+{% block title %}Password Strength Checker — PassForge{% endblock %}
+{% block tool_name %}<span data-i18n="tool.strength.title">{{ t('tool.strength.title') }}</span>{% endblock %}
+{% block tool_title %}<span data-i18n="tool.strength.title">{{ t('tool.strength.title') }}</span>{% endblock %}
+{% block tool_subtitle %}<span data-i18n="tool.strength.desc">{{ t('tool.strength.desc') }}</span>{% endblock %}
+
+{% block tool_canvas %}
+<div class="tool-card-box">
+    <!-- Password Input Box -->
+    <div class="flex flex-col gap-2">
+        <label for="checkInput" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Enter or paste a password to audit</label>
+        <div class="output-box-wrapper">
+            <input type="password" id="checkInput" placeholder="Type or paste password..."
+                   class="flex-1 bg-transparent border-none outline-none font-mono text-lg text-slate-100 placeholder-slate-500">
+            <div class="flex items-center gap-2">
+                <button type="button" id="toggleMaskBtn" class="btn btn-icon" title="Toggle visibility">
+                    <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
+                </button>
+                <button type="button" id="clearInputBtn" class="btn btn-icon" title="Clear input">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Strength Evaluation Meter -->
+    <div class="meter-card">
+        <div class="flex items-center justify-between text-xs">
+            <span class="font-medium text-slate-300">Audited Strength: <strong id="auditLabel" class="text-slate-400">-</strong></span>
+            <span id="auditEntropy" class="font-mono text-slate-400">0.0 bits entropy</span>
+        </div>
+        <div class="meter-track">
+            <div id="auditFill" class="meter-fill" style="width: 0%;"></div>
+        </div>
+        <div id="auditCrackTime" class="text-[11px] text-slate-400">Estimated crack time: -</div>
+    </div>
+
+    <!-- Character Composition Breakdown -->
+    <div class="p-4 rounded-xl bg-slate-950/60 border border-white/5 flex flex-col gap-3">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Character Composition</span>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div class="p-3 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col items-center">
+                <span class="text-xs text-slate-400">Uppercase</span>
+                <span id="compUpper" class="font-mono text-base font-bold text-slate-200 mt-1">0</span>
+            </div>
+            <div class="p-3 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col items-center">
+                <span class="text-xs text-slate-400">Lowercase</span>
+                <span id="compLower" class="font-mono text-base font-bold text-slate-200 mt-1">0</span>
+            </div>
+            <div class="p-3 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col items-center">
+                <span class="text-xs text-slate-400">Digits</span>
+                <span id="compDigits" class="font-mono text-base font-bold text-slate-200 mt-1">0</span>
+            </div>
+            <div class="p-3 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col items-center">
+                <span class="text-xs text-slate-400">Symbols</span>
+                <span id="compSymbols" class="font-mono text-base font-bold text-slate-200 mt-1">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Findings and Tips Cards -->
+    <div class="analysis-cards-grid">
+        <div class="analysis-card">
+            <h4>Security Findings</h4>
+            <ul id="findingsList" class="analysis-list">
+                <li class="text-slate-400 italic text-xs">Enter a password above to begin analysis.</li>
+            </ul>
+        </div>
+
+        <div class="analysis-card">
+            <h4>Recommendations</h4>
+            <ul id="tipsList" class="analysis-list">
+                <li class="text-slate-400 italic text-xs">Recommendations will be generated automatically.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="{{ url_for('static', filename='js/tools/strength-checker.js') }}"></script>
+{% endblock %}

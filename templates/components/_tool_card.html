@@ -1,0 +1,23 @@
+{% macro render_tool_card(tool) %}
+<a href="{{ url_for(tool.endpoint) if tool.endpoint else tool.url }}" class="tool-card group">
+    <div class="flex items-center gap-3">
+        <div class="tool-icon-box group-hover:scale-105 transition-transform">
+            <i data-lucide="{{ tool.icon }}" class="w-5 h-5"></i>
+        </div>
+        <span class="tool-badge">{{ tool.badge }}</span>
+    </div>
+    <div>
+        <h3 class="text-lg font-semibold text-white group-hover:text-indigo-400 transition-colors">{{ tool.title }}</h3>
+        <p class="text-sm text-slate-400 mt-1.5 leading-relaxed">{{ tool.description }}</p>
+    </div>
+    <div class="tag-list">
+        {% for tag in tool.tags %}
+        <span class="tag-item">#{{ tag }}</span>
+        {% endfor %}
+    </div>
+    <div class="mt-2 text-xs font-semibold text-indigo-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+        <span data-i18n="action.open_tool">{{ t('action.open_tool') }}</span>
+        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+    </div>
+</a>
+{% endmacro %}

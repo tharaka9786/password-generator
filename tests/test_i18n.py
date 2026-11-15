@@ -1,0 +1,104 @@
+"""
+Unit and integration tests for PassForge Internationalization (i18n) Engine.
+Tests English and Sinhala language switching and persistence.
+"""
+
+import json
+import unittest
+
+from app import app
+from blueprints.translations import (
+    get_localized_tools_catalog,
+    get_translation,
+)
+
+
+class TestI18nUnit(unittest.TestCase):
+
+    def test_default_translation_english(self):
+        self.assertEqual(get_translation("nav.home", "en"), "Home")
+        self.assertEqual(get_translation("nav.tools", "en"), "Tools")
+        self.assertEqual(get_translation("tool.password.title", "en"), "Password Generator")
+
+    def test_sinhala_translation(self):
+        self.assertEqual(get_translation("nav.home", "si"), "මුල් පිටුව")
+        self.assertEqual(get_translation("nav.tools", "si"), "මෙවලම්")
+        self.assertEqual(get_translation("tool.password.title", "si"), "මුරපද උත්පාදකය")
+        self.assertEqual(get_translation("tool.breach.title", "si"), "දත්ත කාන්දුවීම් පරීක්ෂකය")
+
+    def test_unsupported_language_fallback(self):
+        # Unsupported language code should fall back to English
+        self.assertEqual(get_translation("nav.home", "fr"), "Home")
+
+    def test_unknown_key_fallback(self):
+        # Non-existent key should return the key itself
+        self.assertEqual(get_translation("non.existent.key", "en"), "non.existent.key")
+        self.assertEqual(get_translation("non.existent.key", "si"), "non.existent.key")
+
+    def test_localized_tools_catalog_en(self):
+        catalog = get_localized_tools_catalog("en")
+        pwd_tool = next((t for t in catalog if t["id"] == "password"), None)
+        self.assertIsNotNone(pwd_tool)
+        self.assertEqual(pwd_tool["title"], "Password Generator")
+
+    def test_localized_tools_catalog_si(self):
+        catalog = get_localized_tools_catalog("si")
+        pwd_tool = next((t for t in catalog if t["id"] == "password"), None)
+        self.assertIsNotNone(pwd_tool)
+        self.assertEqual(pwd_tool["title"], "මුරපද උත්පාදකය")
+        self.assertIn("ආරක්ෂාව", pwd_tool["tags"])
+
+
+class TestI18nIntegration(unittest.TestCase):
+
+    def setUp(self):
+        self.client = app.test_client()
+        self.client.testing = True
+
+    def test_set_language_api_si(self):
+        resp = self.client.post(
+            "/api/set-language",
+            data=json.dumps({"lang": "si"}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertTrue(data["success"])
+        self.assertEqual(data["lang"], "si")
+
+        # Verify cookie was set
+        cookies = resp.headers.getlist("Set-Cookie")
+        self.assertTrue(any("passforge_lang=si" in c for c in cookies))
+
+    def test_set_language_api_en(self):
+        resp = self.client.post(
+            "/api/set-language",
+            data=json.dumps({"lang": "en"}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertTrue(data["success"])
+        self.assertEqual(data["lang"], "en")
+
+        cookies = resp.headers.getlist("Set-Cookie")
+        self.assertTrue(any("passforge_lang=en" in c for c in cookies))
+
+    def test_render_with_sinhala_cookie(self):
+        self.client.set_cookie("passforge_lang", "si")
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, 200)
+        # Sinhala string rendered server-side
+        self.assertIn("මුල් පිටුව".encode("utf-8"), resp.data)
+        self.assertIn("මුරපද උත්පාදකය".encode("utf-8"), resp.data)
+
+    def test_render_with_english_cookie(self):
+        self.client.set_cookie("passforge_lang", "en")
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b"Home", resp.data)
+        self.assertIn(b"Password Generator", resp.data)
+
+
+if __name__ == "__main__":
+    unittest.main()

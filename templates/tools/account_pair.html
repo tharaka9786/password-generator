@@ -1,0 +1,49 @@
+{% extends "tools/_tool_layout.html" %}
+
+{% block title %}Account Pair Generator — PassForge{% endblock %}
+{% block tool_name %}Account Pair{% endblock %}
+{% block tool_title %}Instant Account Credentials{% endblock %}
+{% block tool_subtitle %}<span data-i18n="tool.account_pair.desc">{{ t('tool.account_pair.desc') }}</span>{% endblock %}
+
+{% block tool_canvas %}
+<div class="tool-card-box">
+    <!-- Double-Decker Credential Box -->
+    <div class="flex flex-col gap-4 bg-slate-950 border border-white/10 rounded-2xl p-5 md:p-6 shadow-inner">
+        <!-- Username Field -->
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Generated Username</span>
+            <div class="flex items-center justify-between gap-3">
+                <span id="comboUsername" class="font-mono text-lg md:text-xl font-bold text-emerald-400 break-all">Generating...</span>
+                <button id="copyComboUserBtn" class="mini-copy shrink-0">Copy</button>
+            </div>
+        </div>
+
+        <div class="h-px bg-white/10"></div>
+
+        <!-- Password Field -->
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Generated Password</span>
+            <div class="flex items-center justify-between gap-3">
+                <span id="comboPassword" class="font-mono text-lg md:text-xl font-bold text-sky-400 break-all">Generating...</span>
+                <button id="copyComboPassBtn" class="mini-copy shrink-0">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row gap-3">
+        <button id="generateComboBtn" class="flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
+            <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+            <span>Generate New Pair</span>
+        </button>
+        <button id="copyBothBtn" class="py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 font-semibold text-sm transition flex items-center justify-center gap-2">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            <span>Copy Both (User : Pass)</span>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="{{ url_for('static', filename='js/tools/account-pair.js') }}"></script>
+{% endblock %}

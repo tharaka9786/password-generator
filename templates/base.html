@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang|default('en') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base-path" content="{{ request.script_root }}">
+    <title>{% block title %}PassForge — Security & Identity Suite{% endblock %}</title>
+    <meta name="description" content="{% block description %}Cryptographically secure passwords, usernames, strength auditing, and cryptographic hash tools.{% endblock %}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+
+    <!-- Google Fonts with Sinhala Support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Sinhala:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0a0e17',
+                        cardBg: 'rgba(22, 29, 47, 0.85)',
+                        accentPrimary: '#6366f1',
+                        accentHover: '#4f46e5',
+                        accentCyan: '#06b6d4',
+                        accentGreen: '#34d399',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Sinhala', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Style System -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-darkBg text-slate-100 flex flex-col min-h-screen">
+    <!-- Ambient Background Lighting -->
+    <div class="background-decorations">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    {% include "components/_navbar.html" %}
+
+    <!-- Main Page Content Slot -->
+    <div class="site-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Global Footer -->
+    {% include "components/_footer.html" %}
+
+    <!-- Global Toast Component -->
+    {% include "components/_toast.html" %}
+
+    <!-- Internationalization (i18n) Engine -->
+    <script type="module" src="{{ url_for('static', filename='js/shared/i18n.js') }}"></script>
+
+    <!-- Core Nav Script -->
+    <script type="module" src="{{ url_for('static', filename='js/shared/nav.js') }}"></script>
+
+    <!-- Per-Page Extra Scripts -->
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        // Fallback Lucide trigger
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

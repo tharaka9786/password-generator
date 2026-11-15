@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% import "components/_tool_card.html" as cards %}
+
+{% block title %}Tools Hub — PassForge Security Suite{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-5 py-12 md:py-16 flex flex-col gap-10">
+    <!-- Header -->
+    <div class="flex flex-col gap-3">
+        <div class="inline-flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
+            <i data-lucide="wrench" class="w-4 h-4"></i>
+            <span data-i18n="hub.directory">{{ t('hub.directory') }}</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white" data-i18n="hub.title">{{ t('hub.title') }}</h1>
+        <p class="text-slate-400 text-sm md:text-base max-w-2xl leading-relaxed" data-i18n="hub.subtitle">
+            {{ t('hub.subtitle') }}
+        </p>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-slate-900/60 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
+        <!-- Search Input -->
+        <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="toolSearchInput" placeholder="{{ t('hub.search_placeholder') }}" data-i18n-placeholder="hub.search_placeholder"
+                   class="w-full bg-slate-950 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+        </div>
+
+        <!-- Filter Tags -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0" id="filterPills">
+            <button class="filter-pill active px-3.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white transition" data-filter="all">
+                <span data-i18n="hub.filter_all">{{ t('hub.filter_all') }}</span> ({{ tools|length }})
+            </button>
+            <button class="filter-pill px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-300 transition" data-filter="Security" data-i18n="hub.filter_security">{{ t('hub.filter_security') }}</button>
+            <button class="filter-pill px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-300 transition" data-filter="Identity" data-i18n="hub.filter_identity">{{ t('hub.filter_identity') }}</button>
+            <button class="filter-pill px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-300 transition" data-filter="Crypto" data-i18n="hub.filter_crypto">{{ t('hub.filter_crypto') }}</button>
+        </div>
+    </div>
+
+    <!-- Tool Cards Grid -->
+    <div id="toolsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for tool in tools %}
+        <div class="tool-card-container" data-title="{{ tool.title|lower }}" data-desc="{{ tool.description|lower }}" data-tags="{{ tool.tags|join(' ')|lower }}">
+            {{ cards.render_tool_card(tool) }}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Empty State (hidden by default) -->
+    <div id="noResultsState" class="hidden text-center py-16 flex flex-col items-center justify-center gap-3">
+        <i data-lucide="search-x" class="w-10 h-10 text-slate-500"></i>
+        <h3 class="text-base font-semibold text-slate-300" data-i18n="hub.no_results">{{ t('hub.no_results') }}</h3>
+        <p class="text-xs text-slate-500" data-i18n="hub.no_results_desc">{{ t('hub.no_results_desc') }}</p>
+    </div>
+
+    <!-- Future Extensibility Banner -->
+    <div class="mt-8 p-6 rounded-2xl bg-gradient-to-r from-indigo-950/40 to-slate-900 border border-indigo-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+            <h3 class="text-base font-bold text-white" data-i18n="hub.future_title">{{ t('hub.future_title') }}</h3>
+            <p class="text-xs text-slate-400 mt-1" data-i18n="hub.future_desc">{{ t('hub.future_desc') }}</p>
+        </div>
+        <a href="{{ url_for('pages.about') }}" class="shrink-0 px-4 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition" data-i18n="hub.future_link">
+            {{ t('hub.future_link') }}
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('toolSearchInput');
+        const cards = document.querySelectorAll('.tool-card-container');
+        const filterPills = document.querySelectorAll('.filter-pill');
+        const emptyState = document.getElementById('noResultsState');
+
+        let currentFilter = 'all';
+
+        function applyFilters() {
+            const query = searchInput.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = card.getAttribute('data-title');
+                const desc = card.getAttribute('data-desc');
+                const tags = card.getAttribute('data-tags');
+
+                const matchesQuery = !query || title.includes(query) || desc.includes(query) || tags.includes(query);
+                const matchesFilter = (currentFilter === 'all') || tags.includes(currentFilter.toLowerCase());
+
+                if (matchesQuery && matchesFilter) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+        }
+
+        searchInput.addEventListener('input', applyFilters);
+
+        filterPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                filterPills.forEach(p => {
+                    p.classList.remove('active', 'bg-indigo-600', 'text-white');
+                    p.classList.add('bg-white/5', 'text-slate-300');
+                });
+                pill.classList.add('active', 'bg-indigo-600', 'text-white');
+                pill.classList.remove('bg-white/5', 'text-slate-300');
+
+                currentFilter = pill.getAttribute('data-filter');
+                applyFilters();
+            });
+        });
+    });
+</script>
+{% endblock %}

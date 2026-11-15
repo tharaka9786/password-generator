@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="tool-layout-container">
+    <!-- Breadcrumb Bar -->
+    <nav class="breadcrumb-bar" aria-label="Breadcrumb">
+        <a href="{{ url_for('pages.home') }}" class="flex items-center gap-1.5">
+            <i data-lucide="home" class="w-3.5 h-3.5"></i>
+            <span data-i18n="nav.home">{{ t('nav.home') }}</span>
+        </a>
+        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500"></i>
+        <a href="{{ url_for('pages.tools_hub') }}" data-i18n="nav.tools">{{ t('nav.tools') }}</a>
+        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500"></i>
+        <span class="text-indigo-400 font-medium">{% block tool_name %}{% endblock %}</span>
+    </nav>
+
+    <!-- 2-Column Responsive Layout -->
+    <div class="tool-grid-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="tool-sidebar">
+            <div class="sidebar-title" data-i18n="sidebar.title">{{ t('sidebar.title') }}</div>
+            <a href="{{ url_for('password.password_tool') }}" class="sidebar-item {% if active_tool == 'password' %}active{% endif %}">
+                <i data-lucide="key-round" class="w-4 h-4 text-indigo-400"></i>
+                <span data-i18n="tool.password.title">{{ t('tool.password.title') }}</span>
+            </a>
+            <a href="{{ url_for('username.username_tool') }}" class="sidebar-item {% if active_tool == 'username' %}active{% endif %}">
+                <i data-lucide="user" class="w-4 h-4 text-emerald-400"></i>
+                <span data-i18n="tool.username.title">{{ t('tool.username.title') }}</span>
+            </a>
+            <a href="{{ url_for('password.account_pair_tool') }}" class="sidebar-item {% if active_tool == 'account-pair' %}active{% endif %}">
+                <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i>
+                <span data-i18n="tool.account_pair.title">{{ t('tool.account_pair.title') }}</span>
+            </a>
+            <a href="{{ url_for('strength_checker.strength_checker_tool') }}" class="sidebar-item {% if active_tool == 'strength-checker' %}active{% endif %}">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
+                <span data-i18n="tool.strength.title">{{ t('tool.strength.title') }}</span>
+            </a>
+            <a href="{{ url_for('hash_generator.hash_tool') }}" class="sidebar-item {% if active_tool == 'hash-generator' %}active{% endif %}">
+                <i data-lucide="hash" class="w-4 h-4 text-purple-400"></i>
+                <span data-i18n="tool.hash.title">{{ t('tool.hash.title') }}</span>
+            </a>
+            <a href="{{ url_for('breach_checker.breach_checker_tool') }}" class="sidebar-item {% if active_tool == 'breach-checker' %}active{% endif %}">
+                <i data-lucide="shield-ban" class="w-4 h-4 text-rose-400"></i>
+                <span data-i18n="tool.breach.title">{{ t('tool.breach.title') }}</span>
+            </a>
+        </aside>
+
+        <!-- Main Tool Content Canvas -->
+        <main class="tool-main-panel">
+            <div class="tool-header-block">
+                <h1 class="tool-title">{% block tool_title %}{% endblock %}</h1>
+                <p class="tool-description">{% block tool_subtitle %}{% endblock %}</p>
+            </div>
+
+            {% block tool_canvas %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

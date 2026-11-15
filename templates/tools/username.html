@@ -1,0 +1,124 @@
+{% extends "tools/_tool_layout.html" %}
+
+{% block title %}Username Generator — PassForge{% endblock %}
+{% block tool_name %}<span data-i18n="tool.username.title">{{ t('tool.username.title') }}</span>{% endblock %}
+{% block tool_title %}<span data-i18n="tool.username.title">{{ t('tool.username.title') }}</span>{% endblock %}
+{% block tool_subtitle %}<span data-i18n="tool.username.desc">{{ t('tool.username.desc') }}</span>{% endblock %}
+
+{% block tool_canvas %}
+<div class="tool-card-box">
+    <!-- Output Box -->
+    <div class="output-box-wrapper">
+        <div class="mono-display green-accent" id="usernameDisplay">Generating...</div>
+        <div class="btn-group">
+            <button id="copyUsernameBtn" class="btn btn-primary" title="Copy to clipboard">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+                <span>Copy</span>
+            </button>
+            <button id="refreshUsernameBtn" class="btn btn-icon" title="Generate new username">
+                <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Badges Row -->
+    <div class="flex items-center gap-2 flex-wrap text-xs font-mono">
+        <span id="usernameLengthBadge" class="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-slate-300">14 characters</span>
+        <span id="usernameStyleBadge" class="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-emerald-400">Classic Style</span>
+        <span class="px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">Available Format</span>
+    </div>
+
+    <!-- Controls -->
+    <div class="setting-block">
+        <!-- Style Chips -->
+        <div class="flex flex-col gap-2">
+            <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Theme / Naming Style</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="styleSelector">
+                <button type="button" class="style-chip px-3 py-2 rounded-lg text-xs font-medium bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 transition" data-style="classic">Classic</button>
+                <button type="button" class="style-chip px-3 py-2 rounded-lg text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-300 transition" data-style="tech">Tech / Cyber</button>
+                <button type="button" class="style-chip px-3 py-2 rounded-lg text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-300 transition" data-style="gamer">Gamer Titans</button>
+                <button type="button" class="style-chip px-3 py-2 rounded-lg text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-300 transition" data-style="minimal">Minimalist</button>
+            </div>
+        </div>
+
+        <!-- Separator & Casing -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+                <label for="uSeparator" class="text-xs font-medium text-slate-300">Word Separator</label>
+                <select id="uSeparator" class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none">
+                    <option value="" selected>None (CamelCase)</option>
+                    <option value="_">Underscore ( _ )</option>
+                    <option value="-">Hyphen ( - )</option>
+                    <option value=".">Period ( . )</option>
+                </select>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+                <label for="uCasing" class="text-xs font-medium text-slate-300">Capitalization</label>
+                <select id="uCasing" class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none">
+                    <option value="title" selected>TitleCase (WordWord)</option>
+                    <option value="lower">lowercase (wordword)</option>
+                    <option value="upper">UPPERCASE (WORDWORD)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Checkbox Options -->
+        <div class="checkbox-grid">
+            <label class="check-card">
+                <input type="checkbox" id="uIncludeNumber" checked>
+                <span class="check-box"></span>
+                <div class="flex flex-col">
+                    <span class="text-xs font-medium text-slate-200">Append Random Digits</span>
+                    <span class="text-[11px] text-slate-400">e.g. ShadowFalcon42</span>
+                </div>
+            </label>
+
+            <label class="check-card">
+                <input type="checkbox" id="uLimitLength">
+                <span class="check-box"></span>
+                <div class="flex flex-col">
+                    <span class="text-xs font-medium text-slate-200">Max Length Limit</span>
+                    <span class="text-[11px] text-slate-400">Limit to 15 chars (Discord/Twitter)</span>
+                </div>
+            </label>
+        </div>
+
+        <!-- Batch Count -->
+        <div class="flex items-center justify-between pt-2 text-sm text-slate-300">
+            <label for="usernameBatchCount">Generate Multiple:</label>
+            <select id="usernameBatchCount" class="bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                <option value="1" selected>1 username</option>
+                <option value="5">5 usernames</option>
+                <option value="10">10 usernames</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Bulk Container -->
+    <div id="usernameBulkContainer" class="hidden flex flex-col gap-2 p-3.5 rounded-xl bg-slate-950/70 border border-white/10">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+            <span>Generated Usernames</span>
+            <button id="copyAllUsernamesBtn" class="text-indigo-400 hover:text-indigo-300 font-semibold text-xs">Copy All</button>
+        </div>
+        <div id="usernameBulkList" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto"></div>
+    </div>
+
+    <div id="usernameErrorBanner" class="hidden p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs"></div>
+</div>
+
+<!-- History Drawer -->
+<div class="history-box">
+    <div class="history-header">
+        <h3>Username History</h3>
+        <button id="clearUsernameHistoryBtn" class="text-xs text-slate-500 hover:text-slate-300 transition">Clear</button>
+    </div>
+    <div id="usernameHistoryList" class="history-items">
+        <p class="text-xs text-slate-500 italic text-center py-2">Generated usernames will appear here.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="{{ url_for('static', filename='js/tools/username.js') }}"></script>
+{% endblock %}

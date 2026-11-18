@@ -41,7 +41,7 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
             "භූමිය": "N+ñh",
             "භූමිකාව": "N+ñldj",
             "\u0DB7\u0DD4\u0DDFමිකාව": "N+ñldj",  # Decomposed Dīrgha Pāpilla (\u0DD4\u0DDF)
-            "භුමි": "Nqñ",
+            "භුමි": "N=ñ",
             "අංශ": "wxY",
             "අංක": "wxl",
             "හූණා": "y+Kd",
@@ -62,11 +62,11 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
 
     def test_curved_bottom_consonant_integrated_ligatures(self):
         """
-        Verifies that consonants with descending strokes use =, flat/rounded consonants (නු, භු)
+        Verifies that consonants with descending/curved right strokes use =, flat/rounded consonants (නු)
         use standard tucked-under q, and long ූ uses integrated + ligatures or dedicated glyphs.
         """
         expected_ligatures = {
-            "භු": "Nq",
+            "භු": "N=",
             "භූ": "N+",
             "හු": "yq",
             "හූ": "y+",
@@ -160,7 +160,7 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
     def test_font_glyph_continuity_and_css_letter_spacing(self):
         """
         Verifies that:
-        1. FMAbhaya.ttf renders nu (kq), bhu (Nq), nuu (k+), and bhuu (N+) with
+        1. FMAbhaya.ttf renders nu (kq), bhu (N=), nuu (k+), and bhuu (N+) with
            complete pixel continuity (seamlessly connected pāpilla to consonant stroke).
         2. style.css and tools.css enforce letter-spacing: 0 !important on FM Abhaya text.
         """
@@ -172,7 +172,7 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
         self.assertTrue(os.path.exists(ttf_path), f"FMAbhaya.ttf not found at {ttf_path}")
 
         font = ImageFont.truetype(ttf_path, size=48)
-        for seq, label in [("kq", "නු"), ("Nq", "භු"), ("yq", "හු"), ("Yq", "ශු"), ("k+", "නූ"), ("N+", "භූ")]:
+        for seq, label in [("kq", "නු"), ("N=", "භු"), ("yq", "හු"), ("Yq", "ශු"), ("k+", "නූ"), ("N+", "භූ")]:
             with self.subTest(seq=seq, label=label):
                 im = Image.new("L", (80, 80), color=0)
                 draw = ImageDraw.Draw(im)
@@ -334,19 +334,19 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
 
     def test_descending_stem_consonants_use_hook_papi(self):
         """
-        Verifies that ONLY true descending-stem consonants use = for short pāpilla.
+        Verifies that consonants using = for short pāpilla map correctly.
         """
-        descending_stem = {"ක": "l=", "ග": ".=", "ත": ";=", "ඟ": "Õ="}
+        descending_stem = {"ක": "l=", "ග": ".=", "ත": ";=", "ඟ": "Õ=", "භ": "N="}
         for cons, expected in descending_stem.items():
             with self.subTest(cons=cons):
                 out = self._convert(cons + "ු")
-                self.assertEqual(out, expected, f"Descending-stem '{cons}ු' should map to '{expected}', got '{out}'")
+                self.assertEqual(out, expected, f"'{cons}ු' should map to '{expected}', got '{out}'")
 
     def test_non_descending_consonants_use_tucked_q_papi(self):
         """
-        Verifies that non-descending consonants (න, භ, හ, ශ) use q for short pāpilla.
+        Verifies that non-descending consonants (න, හ, ශ) use q for short pāpilla.
         """
-        tucked_under = {"න": "kq", "භ": "Nq", "හ": "yq", "ශ": "Yq"}
+        tucked_under = {"න": "kq", "හ": "yq", "ශ": "Yq"}
         for cons, expected in tucked_under.items():
             with self.subTest(cons=cons):
                 out = self._convert(cons + "ු")

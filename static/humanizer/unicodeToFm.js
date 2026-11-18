@@ -137,7 +137,7 @@
   const SPECIAL_PAPI_BY_CONS = {
     'ද': 'ÿ', 'ඳ': '÷', 'ර': 're', 'ක': 'l=', 'ග': '.=',
     'ත': ';=', 'ඟ': 'Õ=', 'ල': '¨',
-    'ඤ': 'û', 'ළ': '¿', 'න': 'kq', 'භ': 'Nq', 'හ': 'yq', 'ශ': 'Yq'
+    'ඤ': 'û', 'ළ': '¿', 'න': 'kq', 'භ': 'N=', 'හ': 'yq', 'ශ': 'Yq'
   };
 
   // Special Consonant + Diga Papi-pilla (ූ) indexed by baseCons (smooth curved-bottom ligatures & dedicated glyphs)

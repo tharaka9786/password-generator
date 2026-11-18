@@ -63,6 +63,18 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "en": "All Tools",
         "si": "සියලු මෙවලම්",
     },
+    "sidebar.toggle": {
+        "en": "Sidebar",
+        "si": "පැති තීරුව",
+    },
+    "sidebar.toggle_hide": {
+        "en": "Hide Tools Sidebar",
+        "si": "මෙවලම් පැති තීරුව සඟවන්න",
+    },
+    "sidebar.toggle_show": {
+        "en": "Show Tools Sidebar",
+        "si": "මෙවලම් පැති තීරුව පෙන්වන්න",
+    },
 
     # -------------------------------------------------------------
     # Tool Names & Descriptions

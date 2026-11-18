@@ -44,6 +44,15 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
 
+    <!-- Early Sidebar State Init to Prevent Layout Shift / Flash -->
+    <script>
+        try {
+            if (localStorage.getItem('passforge_sidebar_collapsed') === 'true') {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        } catch (e) {}
+    </script>
+
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-darkBg text-slate-100 flex flex-col min-h-screen">
@@ -72,6 +81,9 @@
 
     <!-- Core Nav Script -->
     <script type="module" src="{{ url_for('static', filename='js/shared/nav.js') }}"></script>
+
+    <!-- Collapsible Tools Sidebar Controller -->
+    <script type="module" src="{{ url_for('static', filename='js/shared/sidebar.js') }}"></script>
 
     <!-- Per-Page Extra Scripts -->
     {% block extra_js %}{% endblock %}

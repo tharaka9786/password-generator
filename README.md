@@ -173,7 +173,7 @@ cd C:\wamp64\www\password-generator
 
 ## 🧪 Running Automated Tests
 
-Run the complete test suite (91 unit and integration tests):
+Run the complete test suite (92 unit and integration tests):
 
 ```powershell
 cd C:\wamp64\www\password-generator

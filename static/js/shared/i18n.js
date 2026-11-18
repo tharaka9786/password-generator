@@ -19,6 +19,9 @@ export const TRANSLATIONS = {
         "footer.tools_hub": "Tools Hub",
         "footer.about_privacy": "About & Privacy",
         "sidebar.title": "All Tools",
+        "sidebar.toggle": "Sidebar",
+        "sidebar.toggle_hide": "Hide Tools Sidebar",
+        "sidebar.toggle_show": "Show Tools Sidebar",
 
         // Tool Names
         "tool.password.title": "Password Generator",
@@ -120,6 +123,9 @@ export const TRANSLATIONS = {
         "footer.tools_hub": "මෙවලම් මධ්‍යස්ථානය",
         "footer.about_privacy": "විස්තර සහ පෞද්ගලිකත්වය",
         "sidebar.title": "සියලු මෙවලම්",
+        "sidebar.toggle": "පැති තීරුව",
+        "sidebar.toggle_hide": "මෙවලම් පැති තීරුව සඟවන්න",
+        "sidebar.toggle_show": "මෙවලම් පැති තීරුව පෙන්වන්න",
 
         // Tool Names
         "tool.password.title": "මුරපද උත්පාදකය",

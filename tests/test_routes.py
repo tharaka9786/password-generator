@@ -127,6 +127,31 @@ class TestRoutes(unittest.TestCase):
         self.assertIn(b"Sinhala Humanizer", response.data)
         self.assertIn(b"offlineEngineBundle.js", response.data)
 
+    def test_collapsible_tools_sidebar_layout(self):
+        """
+        Verify that all tool pages contain the collapsible sidebar toggle button,
+        persisted localStorage script, sidebar.js script, and responsive wrappers.
+        """
+        tool_urls = [
+            "/tools/password",
+            "/tools/username",
+            "/tools/account-pair",
+            "/tools/strength-checker",
+            "/tools/hash",
+            "/tools/breach-checker",
+            "/tools/sinhala-humanizer",
+        ]
+        for url in tool_urls:
+            with self.subTest(url=url):
+                res = self.client.get(url)
+                self.assertEqual(res.status_code, 200)
+                body = res.get_data(as_text=True)
+                self.assertIn('id="sidebar-toggle-btn"', body)
+                self.assertIn('class="tool-sidebar-inner"', body)
+                self.assertIn('passforge_sidebar_collapsed', body)
+                self.assertIn('sidebar.js', body)
+                self.assertIn('Ctrl+\\', body)
+
 
 if __name__ == "__main__":
     unittest.main()

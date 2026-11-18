@@ -2,51 +2,77 @@
 
 {% block content %}
 <div class="tool-layout-container">
-    <!-- Breadcrumb Bar -->
-    <nav class="breadcrumb-bar" aria-label="Breadcrumb">
-        <a href="{{ url_for('pages.home') }}" class="flex items-center gap-1.5">
-            <i data-lucide="home" class="w-3.5 h-3.5"></i>
-            <span data-i18n="nav.home">{{ t('nav.home') }}</span>
-        </a>
-        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500"></i>
-        <a href="{{ url_for('pages.tools_hub') }}" data-i18n="nav.tools">{{ t('nav.tools') }}</a>
-        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500"></i>
-        <span class="text-indigo-400 font-medium">{% block tool_name %}{% endblock %}</span>
-    </nav>
+    <!-- Breadcrumb & Collapsible Sidebar Top Bar -->
+    <div class="tool-top-bar">
+        <button type="button"
+                id="sidebar-toggle-btn"
+                class="sidebar-toggle-btn"
+                aria-label="Toggle Tools Sidebar"
+                aria-expanded="true"
+                data-tooltip-hide="Hide Tools Sidebar (Ctrl+\)"
+                data-tooltip-show="Show Tools Sidebar (Ctrl+\)"
+                title="Hide Tools Sidebar (Ctrl+\)">
+            <span class="toggle-icon-wrap">
+                <svg class="toggle-sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+                    <path d="M9 3v18"></path>
+                    <path class="chevron-arrow" d="m14 9-3 3 3 3"></path>
+                </svg>
+            </span>
+            <span class="toggle-label" data-i18n="sidebar.toggle">Sidebar</span>
+            <kbd class="toggle-kbd-badge">Ctrl+\</kbd>
+        </button>
+
+        <span class="top-bar-divider" aria-hidden="true"></span>
+
+        <!-- Breadcrumb Bar -->
+        <nav class="breadcrumb-bar" aria-label="Breadcrumb">
+            <a href="{{ url_for('pages.home') }}" class="flex items-center gap-1.5">
+                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                <span data-i18n="nav.home">{{ t('nav.home') }}</span>
+            </a>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500"></i>
+            <a href="{{ url_for('pages.tools_hub') }}" data-i18n="nav.tools">{{ t('nav.tools') }}</a>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500"></i>
+            <span class="text-indigo-400 font-medium">{% block tool_name %}{% endblock %}</span>
+        </nav>
+    </div>
 
     <!-- 2-Column Responsive Layout -->
     <div class="tool-grid-wrapper">
         <!-- Sidebar Navigation -->
-        <aside class="tool-sidebar">
-            <div class="sidebar-title" data-i18n="sidebar.title">{{ t('sidebar.title') }}</div>
-            <a href="{{ url_for('password.password_tool') }}" class="sidebar-item {% if active_tool == 'password' %}active{% endif %}">
-                <i data-lucide="key-round" class="w-4 h-4 text-indigo-400"></i>
-                <span data-i18n="tool.password.title">{{ t('tool.password.title') }}</span>
-            </a>
-            <a href="{{ url_for('username.username_tool') }}" class="sidebar-item {% if active_tool == 'username' %}active{% endif %}">
-                <i data-lucide="user" class="w-4 h-4 text-emerald-400"></i>
-                <span data-i18n="tool.username.title">{{ t('tool.username.title') }}</span>
-            </a>
-            <a href="{{ url_for('password.account_pair_tool') }}" class="sidebar-item {% if active_tool == 'account-pair' %}active{% endif %}">
-                <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i>
-                <span data-i18n="tool.account_pair.title">{{ t('tool.account_pair.title') }}</span>
-            </a>
-            <a href="{{ url_for('strength_checker.strength_checker_tool') }}" class="sidebar-item {% if active_tool == 'strength-checker' %}active{% endif %}">
-                <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
-                <span data-i18n="tool.strength.title">{{ t('tool.strength.title') }}</span>
-            </a>
-            <a href="{{ url_for('hash_generator.hash_tool') }}" class="sidebar-item {% if active_tool == 'hash-generator' %}active{% endif %}">
-                <i data-lucide="hash" class="w-4 h-4 text-purple-400"></i>
-                <span data-i18n="tool.hash.title">{{ t('tool.hash.title') }}</span>
-            </a>
-            <a href="{{ url_for('breach_checker.breach_checker_tool') }}" class="sidebar-item {% if active_tool == 'breach-checker' %}active{% endif %}">
-                <i data-lucide="shield-ban" class="w-4 h-4 text-rose-400"></i>
-                <span data-i18n="tool.breach.title">{{ t('tool.breach.title') }}</span>
-            </a>
-            <a href="{{ url_for('sinhala_humanizer.sinhala_humanizer_tool') }}" class="sidebar-item {% if active_tool == 'sinhala-humanizer' %}active{% endif %}">
-                <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
-                <span data-i18n="tool.humanizer.title">{{ t('tool.humanizer.title') }}</span>
-            </a>
+        <aside class="tool-sidebar" id="tool-sidebar">
+            <div class="tool-sidebar-inner">
+                <div class="sidebar-title" data-i18n="sidebar.title">{{ t('sidebar.title') }}</div>
+                <a href="{{ url_for('password.password_tool') }}" class="sidebar-item {% if active_tool == 'password' %}active{% endif %}">
+                    <i data-lucide="key-round" class="w-4 h-4 text-indigo-400"></i>
+                    <span data-i18n="tool.password.title">{{ t('tool.password.title') }}</span>
+                </a>
+                <a href="{{ url_for('username.username_tool') }}" class="sidebar-item {% if active_tool == 'username' %}active{% endif %}">
+                    <i data-lucide="user" class="w-4 h-4 text-emerald-400"></i>
+                    <span data-i18n="tool.username.title">{{ t('tool.username.title') }}</span>
+                </a>
+                <a href="{{ url_for('password.account_pair_tool') }}" class="sidebar-item {% if active_tool == 'account-pair' %}active{% endif %}">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i>
+                    <span data-i18n="tool.account_pair.title">{{ t('tool.account_pair.title') }}</span>
+                </a>
+                <a href="{{ url_for('strength_checker.strength_checker_tool') }}" class="sidebar-item {% if active_tool == 'strength-checker' %}active{% endif %}">
+                    <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
+                    <span data-i18n="tool.strength.title">{{ t('tool.strength.title') }}</span>
+                </a>
+                <a href="{{ url_for('hash_generator.hash_tool') }}" class="sidebar-item {% if active_tool == 'hash-generator' %}active{% endif %}">
+                    <i data-lucide="hash" class="w-4 h-4 text-purple-400"></i>
+                    <span data-i18n="tool.hash.title">{{ t('tool.hash.title') }}</span>
+                </a>
+                <a href="{{ url_for('breach_checker.breach_checker_tool') }}" class="sidebar-item {% if active_tool == 'breach-checker' %}active{% endif %}">
+                    <i data-lucide="shield-ban" class="w-4 h-4 text-rose-400"></i>
+                    <span data-i18n="tool.breach.title">{{ t('tool.breach.title') }}</span>
+                </a>
+                <a href="{{ url_for('sinhala_humanizer.sinhala_humanizer_tool') }}" class="sidebar-item {% if active_tool == 'sinhala-humanizer' %}active{% endif %}">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                    <span data-i18n="tool.humanizer.title">{{ t('tool.humanizer.title') }}</span>
+                </a>
+            </div>
         </aside>
 
         <!-- Main Tool Content Canvas -->

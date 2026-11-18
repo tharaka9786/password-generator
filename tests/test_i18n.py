@@ -99,6 +99,25 @@ class TestI18nIntegration(unittest.TestCase):
         self.assertIn(b"Home", resp.data)
         self.assertIn(b"Password Generator", resp.data)
 
+    def test_footer_built_with_translation_rendered(self):
+        # Ensure raw "footer.built_with" is not displayed in the HTML output
+        resp_en = self.client.get("/")
+        self.assertEqual(resp_en.status_code, 200)
+        self.assertIn(b"PassForge Security &amp; Identity Suite", resp_en.data)
+
+        self.client.set_cookie("passforge_lang", "si")
+        resp_si = self.client.get("/")
+        self.assertEqual(resp_si.status_code, 200)
+        self.assertIn("PassForge ආරක්ෂණ සහ අනන්‍යතා මෙවලම් කට්ටලය".encode("utf-8"), resp_si.data)
+
+    def test_js_i18n_dictionary_contains_footer_built_with(self):
+        import os
+        js_path = os.path.join(os.path.dirname(__file__), "..", "static", "js", "shared", "i18n.js")
+        with open(js_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn('"footer.built_with": "PassForge Security & Identity Suite"', content)
+        self.assertIn('"footer.built_with": "PassForge ආරක්ෂණ සහ අනන්‍යතා මෙවලම් කට්ටලය"', content)
+
 
 if __name__ == "__main__":
     unittest.main()

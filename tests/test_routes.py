@@ -152,6 +152,28 @@ class TestRoutes(unittest.TestCase):
                 self.assertIn('sidebar.js', body)
                 self.assertIn('Ctrl+\\', body)
 
+    def test_tools_session_history_boxes(self):
+        """
+        Verify that all PassForge tools contain a persistent Session History container
+        and clear button in their rendered template.
+        """
+        history_configs = [
+            ("/tools/password", "historyList", "clearHistoryBtn"),
+            ("/tools/username", "usernameHistoryList", "clearUsernameHistoryBtn"),
+            ("/tools/account-pair", "comboHistoryList", "clearComboHistoryBtn"),
+            ("/tools/strength-checker", "strengthHistoryList", "clearStrengthHistoryBtn"),
+            ("/tools/hash", "hashHistoryList", "clearHashHistoryBtn"),
+            ("/tools/breach-checker", "breachHistoryList", "clearBreachHistoryBtn"),
+        ]
+        for url, list_id, clear_btn_id in history_configs:
+            with self.subTest(url=url):
+                res = self.client.get(url)
+                self.assertEqual(res.status_code, 200)
+                body = res.get_data(as_text=True)
+                self.assertIn('class="history-box', body)
+                self.assertIn(f'id="{list_id}"', body)
+                self.assertIn(f'id="{clear_btn_id}"', body)
+
 
 if __name__ == "__main__":
     unittest.main()

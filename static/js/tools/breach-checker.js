@@ -3,10 +3,103 @@
  * Handles k-Anonymity password audits and email exposure lookups.
  */
 
+import { copyToClipboard } from '../shared/clipboard.js';
 import { postJSON } from '../shared/api.js';
 import { showToast } from '../shared/toast.js';
+import { loadSessionHistory, saveSessionHistory, clearSessionHistory } from '../shared/history.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    const breachHistoryList = document.getElementById('breachHistoryList');
+    const clearBreachHistoryBtn = document.getElementById('clearBreachHistoryBtn');
+
+    const STORAGE_KEY = 'passforge_session_history_breach';
+    let breachHistory = loadSessionHistory(STORAGE_KEY);
+
+    function addBreachToHistory(entry) {
+        if (!entry || !entry.title) return;
+        if (breachHistory.length > 0 && breachHistory[0].title === entry.title && breachHistory[0].subtitle === entry.subtitle) return;
+        breachHistory.unshift(entry);
+        if (breachHistory.length > 50) breachHistory.pop();
+        saveSessionHistory(STORAGE_KEY, breachHistory);
+        renderBreachHistory();
+    }
+
+    function renderBreachHistory() {
+        if (!breachHistoryList) return;
+        if (breachHistory.length === 0) {
+            breachHistoryList.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2" data-i18n="label.history_empty">Breach audit records will appear here.</p>';
+            return;
+        }
+        breachHistoryList.innerHTML = '';
+        breachHistory.forEach((item) => {
+            const row = document.createElement('div');
+            row.className = 'history-entry flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 py-2 px-3';
+
+            const info = document.createElement('div');
+            info.className = 'flex flex-wrap items-center gap-2 font-mono text-xs break-all';
+            const badgeClass = item.breached
+                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+
+            info.innerHTML = `
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${badgeClass}">${item.type}</span>
+                <span class="text-slate-200 font-semibold select-all">${item.title}</span>
+                <span class="text-slate-400 text-[11px] select-all">${item.subtitle}</span>
+            `;
+
+            const actions = document.createElement('div');
+            actions.className = 'flex items-center gap-1.5 shrink-0 self-end sm:self-center';
+
+            if (item.copyValue) {
+                const copyMini = document.createElement('button');
+                copyMini.type = 'button';
+                copyMini.className = 'mini-copy';
+                copyMini.textContent = 'Copy';
+                copyMini.title = 'Copy summary';
+                copyMini.addEventListener('click', () => {
+                    copyToClipboard(item.copyValue, 'Copied breach summary!');
+                });
+                actions.appendChild(copyMini);
+            }
+
+            const saveMini = document.createElement('button');
+            saveMini.type = 'button';
+            saveMini.className = 'mini-copy text-amber-400 hover:text-amber-300';
+            saveMini.textContent = 'Save';
+            saveMini.title = 'Save Audit to Activity History';
+            saveMini.addEventListener('click', async () => {
+                try {
+                    const res = await postJSON('save/activity', {
+                        tool_name: 'breach_checker',
+                        input_summary: item.title,
+                        result_summary: item.subtitle,
+                    });
+                    if (res.success) {
+                        showToast(res.message || 'Saved to activity history!');
+                    }
+                } catch (err) {
+                    if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                        showToast('Please log in to save breach audits to your history.');
+                    } else {
+                        showToast(err.message || 'Failed to save audit.');
+                    }
+                }
+            });
+            actions.appendChild(saveMini);
+
+            row.appendChild(info);
+            row.appendChild(actions);
+            breachHistoryList.appendChild(row);
+        });
+    }
+
+    if (clearBreachHistoryBtn) {
+        clearBreachHistoryBtn.addEventListener('click', () => {
+            breachHistory = [];
+            clearSessionHistory(STORAGE_KEY);
+            renderBreachHistory();
+        });
+    }
     // -------------------------------------------------------------------------
     // 1. Inner Mode Tabs
     // -------------------------------------------------------------------------
@@ -143,6 +236,16 @@ document.addEventListener('DOMContentLoaded', () => {
         passPrefix.textContent = data.sha1_prefix ? `${data.sha1_prefix}...` : 'N/A';
 
         if (window.lucide) window.lucide.createIcons();
+
+        addBreachToHistory({
+            type: 'Password',
+            title: `Password (SHA-1: ${data.sha1_prefix || 'N/A'}…)`,
+            subtitle: isClean
+                ? 'CLEAN: Zero known breach occurrences (k-Anonymity)'
+                : `LEAKED: Found in ${count.toLocaleString()} breaches (${sev})`,
+            breached: data.breached,
+            copyValue: isClean ? 'CLEAN: 0 leaks' : `LEAKED: ${count.toLocaleString()} breaches (${sev})`,
+        });
     }
 
     execPassBtn.addEventListener('click', () => auditPassword(passInput.value));
@@ -293,6 +396,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (window.lucide) window.lucide.createIcons();
+
+        addBreachToHistory({
+            type: 'Email',
+            title: `Email: ${data.email || 'Account'}`,
+            subtitle: isClean
+                ? 'SAFE: No known corporate breach leaks found'
+                : `COMPROMISED: ${count} breach${count === 1 ? '' : 'es'} (${(types || []).slice(0, 3).join(', ')})`,
+            breached: !isClean,
+            copyValue: `${data.email} - ${isClean ? 'SAFE' : count + ' breaches detected'}`,
+        });
     }
 
     execEmailBtn.addEventListener('click', () => auditEmail(emailInput.value));
@@ -358,4 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    renderBreachHistory();
 });

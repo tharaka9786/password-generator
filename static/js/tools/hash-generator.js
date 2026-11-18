@@ -4,8 +4,91 @@
 import { copyToClipboard } from '../shared/clipboard.js';
 import { postJSON } from '../shared/api.js';
 import { showToast } from '../shared/toast.js';
+import { loadSessionHistory, saveSessionHistory, clearSessionHistory } from '../shared/history.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    const hashHistoryList = document.getElementById('hashHistoryList');
+    const clearHashHistoryBtn = document.getElementById('clearHashHistoryBtn');
+    const STORAGE_KEY = 'passforge_session_history_hash';
+    let hashHistory = loadSessionHistory(STORAGE_KEY);
+
+    function addHashToHistory(entry) {
+        if (!entry || !entry.title) return;
+        if (hashHistory.length > 0 && hashHistory[0].title === entry.title && hashHistory[0].subtitle === entry.subtitle) return;
+        hashHistory.unshift(entry);
+        if (hashHistory.length > 50) hashHistory.pop();
+        saveSessionHistory(STORAGE_KEY, hashHistory);
+        renderHashHistory();
+    }
+
+    function renderHashHistory() {
+        if (!hashHistoryList) return;
+        if (hashHistory.length === 0) {
+            hashHistoryList.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2" data-i18n="label.history_empty">Computed hashes and ciphers will appear here.</p>';
+            return;
+        }
+        hashHistoryList.innerHTML = '';
+        hashHistory.forEach((item) => {
+            const row = document.createElement('div');
+            row.className = 'history-entry flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 py-2 px-3';
+
+            const info = document.createElement('div');
+            info.className = 'flex flex-col gap-0.5 font-mono text-xs break-all';
+            info.innerHTML = `<span class="text-slate-200 font-medium select-all">${item.title}</span><span class="text-slate-400 text-[11px] select-all">${item.subtitle}</span>`;
+
+            const actions = document.createElement('div');
+            actions.className = 'flex items-center gap-1.5 shrink-0 self-end sm:self-center';
+
+            if (item.copyValue) {
+                const copyMini = document.createElement('button');
+                copyMini.type = 'button';
+                copyMini.className = 'mini-copy';
+                copyMini.textContent = 'Copy';
+                copyMini.title = 'Copy Result';
+                copyMini.addEventListener('click', () => {
+                    copyToClipboard(item.copyValue, 'Copied hash result!');
+                });
+                actions.appendChild(copyMini);
+            }
+
+            const saveMini = document.createElement('button');
+            saveMini.type = 'button';
+            saveMini.className = 'mini-copy text-amber-400 hover:text-amber-300';
+            saveMini.textContent = 'Save';
+            saveMini.title = 'Save to Activity History';
+            saveMini.addEventListener('click', async () => {
+                try {
+                    const res = await postJSON('save/activity', {
+                        tool_name: 'hash_generator',
+                        input_summary: item.title,
+                        result_summary: item.subtitle,
+                    });
+                    if (res.success) {
+                        showToast(res.message || 'Saved to activity history!');
+                    }
+                } catch (err) {
+                    if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                        showToast('Please log in to save to your history.');
+                    } else {
+                        showToast(err.message || 'Failed to save to activity history.');
+                    }
+                }
+            });
+            actions.appendChild(saveMini);
+
+            row.appendChild(info);
+            row.appendChild(actions);
+            hashHistoryList.appendChild(row);
+        });
+    }
+
+    if (clearHashHistoryBtn) {
+        clearHashHistoryBtn.addEventListener('click', () => {
+            hashHistory = [];
+            clearSessionHistory(STORAGE_KEY);
+            renderHashHistory();
+        });
+    }
     // -------------------------------------------------------------
     // Inner Mode Switcher
     // -------------------------------------------------------------
@@ -42,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentHashes = {};
     let debounceTimer = null;
+    let historyDebounce = null;
 
     async function computeHashes(val) {
         try {
@@ -65,6 +149,19 @@ document.addEventListener('DOMContentLoaded', () => {
         debounceTimer = setTimeout(() => {
             computeHashes(textInput.value);
         }, 120);
+
+        clearTimeout(historyDebounce);
+        historyDebounce = setTimeout(() => {
+            const v = (textInput.value || '').trim();
+            if (v && currentHashes.sha256) {
+                const preview = v.length > 28 ? v.slice(0, 28) + '…' : v;
+                addHashToHistory({
+                    title: `Hash: "${preview}"`,
+                    subtitle: `SHA-256: ${currentHashes.sha256.slice(0, 16)}… | MD5: ${currentHashes.md5 || '-'}`,
+                    copyValue: currentHashes.sha256,
+                });
+            }
+        }, 800);
     });
 
     clearBtn.addEventListener('click', () => {
@@ -209,6 +306,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (res.data.key && !cipherKeyInput.value) {
                         cipherKeyInput.value = res.data.key;
                     }
+                    addHashToHistory({
+                        title: `Cipher [${algo.toUpperCase()} - Encrypt]: "${textVal.slice(0, 24)}${textVal.length > 24 ? '…' : ''}"`,
+                        subtitle: `Result: ${currentCipherResult.slice(0, 32)}${currentCipherResult.length > 32 ? '…' : ''}`,
+                        copyValue: currentCipherResult,
+                    });
                 }
             } else {
                 const res = await postJSON('decrypt-text', {
@@ -219,6 +321,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (res.success && res.data) {
                     currentCipherResult = res.data.plaintext;
                     cipherResultDisplay.textContent = currentCipherResult;
+                    addHashToHistory({
+                        title: `Cipher [${algo.toUpperCase()} - Decrypt]: "${textVal.slice(0, 24)}${textVal.length > 24 ? '…' : ''}"`,
+                        subtitle: `Result: ${currentCipherResult.slice(0, 32)}${currentCipherResult.length > 32 ? '…' : ''}`,
+                        copyValue: currentCipherResult,
+                    });
                 }
             }
         } catch (err) {
@@ -282,6 +389,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     reverseSuccessBlock.classList.remove('hidden');
                     reverseFailBlock.classList.add('hidden');
+
+                    addHashToHistory({
+                        title: `Lookup [${res.algorithm}]: ${hashVal.slice(0, 16)}…`,
+                        subtitle: `Match: "${res.plaintext}" (${res.source || 'Database'})`,
+                        copyValue: res.plaintext,
+                    });
                 } else {
                     currentDecryptedHash = '';
                     reverseStatusBadge.textContent = 'NOT FOUND';
@@ -296,6 +409,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     reverseSuccessBlock.classList.add('hidden');
                     reverseFailBlock.classList.remove('hidden');
+
+                    addHashToHistory({
+                        title: `Lookup: ${hashVal.slice(0, 16)}…`,
+                        subtitle: `Status: Not Found (${candidates})`,
+                        copyValue: hashVal,
+                    });
                 }
             }
         } catch (err) {
@@ -327,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initial default execution
+    renderHashHistory();
     computeHashes('PassForge');
     textInput.value = 'PassForge';
     updateCipherUI();

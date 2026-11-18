@@ -4,6 +4,7 @@
 import { copyToClipboard } from '../shared/clipboard.js';
 import { postJSON } from '../shared/api.js';
 import { showToast } from '../shared/toast.js';
+import { loadSessionHistory, saveSessionHistory, clearSessionHistory } from '../shared/history.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const passwordDisplay = document.getElementById('passwordDisplay');
@@ -32,8 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyList = document.getElementById('historyList');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
+    const STORAGE_KEY = 'passforge_session_history_password';
     let currentPasswords = [];
-    const passwordHistory = [];
+    let passwordHistory = loadSessionHistory(STORAGE_KEY);
 
     function syncLength(value) {
         let val = parseInt(value, 10);
@@ -145,13 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function addPasswordToHistory(password) {
         if (!password || passwordHistory.includes(password)) return;
         passwordHistory.unshift(password);
-        if (passwordHistory.length > 10) passwordHistory.pop();
+        if (passwordHistory.length > 50) passwordHistory.pop();
+        saveSessionHistory(STORAGE_KEY, passwordHistory);
         renderPasswordHistory();
     }
 
     function renderPasswordHistory() {
+        if (!historyList) return;
         if (passwordHistory.length === 0) {
-            historyList.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2">Generated passwords will appear here.</p>';
+            historyList.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2" data-i18n="label.history_empty">Generated passwords will appear here.</p>';
             return;
         }
         historyList.innerHTML = '';
@@ -160,15 +164,48 @@ document.addEventListener('DOMContentLoaded', () => {
             item.className = 'history-entry';
             const span = document.createElement('span');
             span.textContent = pwd;
-            span.className = 'break-all';
+            span.className = 'break-all font-mono select-all';
+
+            const actions = document.createElement('div');
+            actions.className = 'flex items-center gap-1.5 ml-2 shrink-0';
 
             const copyMini = document.createElement('button');
-            copyMini.className = 'mini-copy ml-2 shrink-0';
+            copyMini.type = 'button';
+            copyMini.className = 'mini-copy';
             copyMini.textContent = 'Copy';
+            copyMini.title = 'Copy password';
             copyMini.addEventListener('click', () => copyToClipboard(pwd));
 
+            const saveMini = document.createElement('button');
+            saveMini.type = 'button';
+            saveMini.className = 'mini-copy text-emerald-400 hover:text-emerald-300';
+            saveMini.textContent = 'Save';
+            saveMini.title = 'Save to Vault';
+            saveMini.addEventListener('click', async () => {
+                const title = prompt('Enter a title or account name for this password (e.g., GitHub, Work Email):');
+                if (!title || !title.trim()) return;
+                try {
+                    const res = await postJSON('save/vault', {
+                        title: title.trim(),
+                        password: pwd,
+                        category: 'password',
+                    });
+                    if (res.success) {
+                        showToast(res.message || 'Saved to Vault!');
+                    }
+                } catch (err) {
+                    if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                        showToast('Please log in to save passwords to your Vault.');
+                    } else {
+                        showToast(err.message || 'Failed to save to Vault.');
+                    }
+                }
+            });
+
+            actions.appendChild(copyMini);
+            actions.appendChild(saveMini);
             item.appendChild(span);
-            item.appendChild(copyMini);
+            item.appendChild(actions);
             historyList.appendChild(item);
         });
     }
@@ -213,10 +250,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    clearHistoryBtn.addEventListener('click', () => {
-        passwordHistory.length = 0;
-        renderPasswordHistory();
-    });
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', () => {
+            passwordHistory = [];
+            clearSessionHistory(STORAGE_KEY);
+            renderPasswordHistory();
+        });
+    }
 
     // Spacebar keyboard shortcut
     document.addEventListener('keydown', (e) => {
@@ -226,5 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    renderPasswordHistory();
     generatePassword();
 });

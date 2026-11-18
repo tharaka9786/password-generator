@@ -114,11 +114,11 @@
 <!-- History Drawer -->
 <div class="history-box">
     <div class="history-header">
-        <h3>Username History</h3>
-        <button id="clearUsernameHistoryBtn" class="text-xs text-slate-500 hover:text-slate-300 transition">Clear</button>
+        <h3 data-i18n="label.session_history">{{ t('label.session_history') }}</h3>
+        <button id="clearUsernameHistoryBtn" class="text-xs text-slate-500 hover:text-slate-300 transition" data-i18n="action.clear">{{ t('action.clear') }}</button>
     </div>
     <div id="usernameHistoryList" class="history-items">
-        <p class="text-xs text-slate-500 italic text-center py-2">Generated usernames will appear here.</p>
+        <p class="text-xs text-slate-500 italic text-center py-2" data-i18n="label.history_empty">{{ t('label.history_empty') }}</p>
     </div>
 </div>
 {% endblock %}

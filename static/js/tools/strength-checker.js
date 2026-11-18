@@ -1,8 +1,10 @@
 /**
  * Password Strength Checker Tool Script
  */
+import { copyToClipboard } from '../shared/clipboard.js';
 import { postJSON } from '../shared/api.js';
 import { showToast } from '../shared/toast.js';
+import { loadSessionHistory, saveSessionHistory, clearSessionHistory } from '../shared/history.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('checkInput');
@@ -24,9 +26,93 @@ document.addEventListener('DOMContentLoaded', () => {
     const tipsList = document.getElementById('tipsList');
     const saveStrengthResultBtn = document.getElementById('saveStrengthResultBtn');
 
+    const strengthHistoryList = document.getElementById('strengthHistoryList');
+    const clearStrengthHistoryBtn = document.getElementById('clearStrengthHistoryBtn');
+
+    const STORAGE_KEY = 'passforge_session_history_strength';
+    let strengthHistory = loadSessionHistory(STORAGE_KEY);
+
     let debounceTimer = null;
+    let historyDebounce = null;
     let lastAudit = null;
     let lastPassword = '';
+
+    function addStrengthToHistory(pwd, a) {
+        if (!pwd || !a) return;
+        if (strengthHistory.length > 0 && strengthHistory[0].password === pwd) return;
+        strengthHistory.unshift({
+            password: pwd,
+            label: a.label,
+            color: a.color,
+            entropy: a.entropy,
+            crack_time: a.crack_time,
+            score: a.score,
+        });
+        if (strengthHistory.length > 50) strengthHistory.pop();
+        saveSessionHistory(STORAGE_KEY, strengthHistory);
+        renderStrengthHistory();
+    }
+
+    function renderStrengthHistory() {
+        if (!strengthHistoryList) return;
+        if (strengthHistory.length === 0) {
+            strengthHistoryList.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2" data-i18n="label.history_empty">Audited passwords will appear here.</p>';
+            return;
+        }
+        strengthHistoryList.innerHTML = '';
+        strengthHistory.forEach((item) => {
+            const row = document.createElement('div');
+            row.className = 'history-entry flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 py-2 px-3';
+
+            const info = document.createElement('div');
+            info.className = 'flex flex-wrap items-center gap-2 font-mono text-xs break-all';
+            info.innerHTML = `
+                <span class="text-slate-200 font-semibold select-all">${item.password}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background-color: ${item.color}22; color: ${item.color}; border: 1px solid ${item.color}44">${item.label}</span>
+                <span class="text-slate-400 text-[11px]">${item.entropy} bits · ${item.crack_time}</span>
+            `;
+
+            const actions = document.createElement('div');
+            actions.className = 'flex items-center gap-1.5 shrink-0 self-end sm:self-center';
+
+            const copyMini = document.createElement('button');
+            copyMini.type = 'button';
+            copyMini.className = 'mini-copy';
+            copyMini.textContent = 'Copy';
+            copyMini.title = 'Copy password';
+            copyMini.addEventListener('click', () => copyToClipboard(item.password));
+
+            const saveMini = document.createElement('button');
+            saveMini.type = 'button';
+            saveMini.className = 'mini-copy text-amber-400 hover:text-amber-300';
+            saveMini.textContent = 'Save';
+            saveMini.title = 'Save Audit to Activity History';
+            saveMini.addEventListener('click', async () => {
+                try {
+                    const res = await postJSON('save/activity', {
+                        tool_name: 'strength_checker',
+                        input_summary: `Password audit (len ${item.password.length})`,
+                        result_summary: `${item.label} (${item.entropy} bits entropy, crack time: ${item.crack_time})`,
+                    });
+                    if (res.success) {
+                        showToast(res.message || 'Audit saved to activity history!');
+                    }
+                } catch (err) {
+                    if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                        showToast('Please log in to save audits to your history.');
+                    } else {
+                        showToast(err.message || 'Failed to save audit.');
+                    }
+                }
+            });
+
+            actions.appendChild(copyMini);
+            actions.appendChild(saveMini);
+            row.appendChild(info);
+            row.appendChild(actions);
+            strengthHistoryList.appendChild(row);
+        });
+    }
 
     toggleMaskBtn.addEventListener('click', () => {
         if (input.type === 'password') {
@@ -50,6 +136,21 @@ document.addEventListener('DOMContentLoaded', () => {
         debounceTimer = setTimeout(() => {
             runAudit(input.value);
         }, 150);
+
+        clearTimeout(historyDebounce);
+        historyDebounce = setTimeout(() => {
+            const v = (input.value || '').trim();
+            if (v && lastAudit) {
+                addStrengthToHistory(v, lastAudit);
+            }
+        }, 800);
+    });
+
+    input.addEventListener('change', () => {
+        const v = (input.value || '').trim();
+        if (v && lastAudit) {
+            addStrengthToHistory(v, lastAudit);
+        }
     });
 
     async function runAudit(pwd) {
@@ -89,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Please type a password to audit first.');
                 return;
             }
+            addStrengthToHistory(lastPassword, lastAudit);
             try {
                 const res = await postJSON('save/activity', {
                     tool_name: 'strength_checker',
@@ -107,6 +209,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    if (clearStrengthHistoryBtn) {
+        clearStrengthHistoryBtn.addEventListener('click', () => {
+            strengthHistory = [];
+            clearSessionHistory(STORAGE_KEY);
+            renderStrengthHistory();
+        });
+    }
+
+    renderStrengthHistory();
 
     function renderAudit(a) {
         auditLabel.textContent = a.label;

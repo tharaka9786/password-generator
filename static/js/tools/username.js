@@ -4,6 +4,7 @@
 import { copyToClipboard } from '../shared/clipboard.js';
 import { postJSON } from '../shared/api.js';
 import { showToast } from '../shared/toast.js';
+import { loadSessionHistory, saveSessionHistory, clearSessionHistory } from '../shared/history.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const usernameDisplay = document.getElementById('usernameDisplay');
@@ -28,9 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const usernameHistoryList = document.getElementById('usernameHistoryList');
     const clearUsernameHistoryBtn = document.getElementById('clearUsernameHistoryBtn');
 
+    const STORAGE_KEY = 'passforge_session_history_username';
     let currentStyle = 'classic';
     let currentUsernames = [];
-    const usernameHistory = [];
+    let usernameHistory = loadSessionHistory(STORAGE_KEY);
 
     styleChips.forEach((chip) => {
         chip.addEventListener('click', () => {
@@ -116,13 +118,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function addUsernameToHistory(uname) {
         if (!uname || usernameHistory.includes(uname)) return;
         usernameHistory.unshift(uname);
-        if (usernameHistory.length > 10) usernameHistory.pop();
+        if (usernameHistory.length > 50) usernameHistory.pop();
+        saveSessionHistory(STORAGE_KEY, usernameHistory);
         renderUsernameHistory();
     }
 
     function renderUsernameHistory() {
+        if (!usernameHistoryList) return;
         if (usernameHistory.length === 0) {
-            usernameHistoryList.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2">Generated usernames will appear here.</p>';
+            usernameHistoryList.innerHTML = '<p class="text-xs text-slate-500 italic text-center py-2" data-i18n="label.history_empty">Generated usernames will appear here.</p>';
             return;
         }
         usernameHistoryList.innerHTML = '';
@@ -131,15 +135,49 @@ document.addEventListener('DOMContentLoaded', () => {
             item.className = 'history-entry';
             const span = document.createElement('span');
             span.textContent = u;
-            span.className = 'break-all';
+            span.className = 'break-all font-mono select-all';
+
+            const actions = document.createElement('div');
+            actions.className = 'flex items-center gap-1.5 ml-2 shrink-0';
 
             const copyMini = document.createElement('button');
-            copyMini.className = 'mini-copy ml-2 shrink-0';
+            copyMini.type = 'button';
+            copyMini.className = 'mini-copy';
             copyMini.textContent = 'Copy';
+            copyMini.title = 'Copy username';
             copyMini.addEventListener('click', () => copyToClipboard(u));
 
+            const saveMini = document.createElement('button');
+            saveMini.type = 'button';
+            saveMini.className = 'mini-copy text-emerald-400 hover:text-emerald-300';
+            saveMini.textContent = 'Save';
+            saveMini.title = 'Save to Vault';
+            saveMini.addEventListener('click', async () => {
+                const title = prompt('Enter a title or service name for this username (e.g., Discord, Reddit):');
+                if (!title || !title.trim()) return;
+                try {
+                    const res = await postJSON('save/vault', {
+                        title: title.trim(),
+                        username_value: u,
+                        password: '',
+                        category: 'username',
+                    });
+                    if (res.success) {
+                        showToast(res.message || 'Saved to Vault!');
+                    }
+                } catch (err) {
+                    if (err.message && (err.message.includes('Authentication required') || err.message.includes('401'))) {
+                        showToast('Please log in to save usernames to your Vault.');
+                    } else {
+                        showToast(err.message || 'Failed to save to Vault.');
+                    }
+                }
+            });
+
+            actions.appendChild(copyMini);
+            actions.appendChild(saveMini);
             item.appendChild(span);
-            item.appendChild(copyMini);
+            item.appendChild(actions);
             usernameHistoryList.appendChild(item);
         });
     }
@@ -185,10 +223,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    clearUsernameHistoryBtn.addEventListener('click', () => {
-        usernameHistory.length = 0;
-        renderUsernameHistory();
-    });
+    if (clearUsernameHistoryBtn) {
+        clearUsernameHistoryBtn.addEventListener('click', () => {
+            usernameHistory = [];
+            clearSessionHistory(STORAGE_KEY);
+            renderUsernameHistory();
+        });
+    }
 
     document.addEventListener('keydown', (e) => {
         if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
@@ -197,5 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    renderUsernameHistory();
     generateUsername();
 });

@@ -656,3 +656,17 @@ html.sidebar-collapsed .chevron-arrow {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 16px;
 }
+
+/* FM Abhaya Legacy Font Rendering Rules: prevent kerning/letter-spacing distortion on combining diacritics */
+.fm-abhaya-text,
+.fm-text,
+.fm-preview,
+.fm-preview .fm-text,
+[data-font="fm"],
+.font-fm {
+    font-family: 'FMAbhaya', 'FM Abhaya', sans-serif !important;
+    letter-spacing: 0 !important;
+    word-spacing: normal !important;
+    font-kerning: normal !important;
+    font-variant-ligatures: normal !important;
+}

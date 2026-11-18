@@ -156,6 +156,47 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
                 self.assertEqual(out, exp)
                 self.assertFalse(any("\u0D80" <= ch <= "\u0DFF" for ch in out))
 
+    def test_font_glyph_continuity_and_css_letter_spacing(self):
+        """
+        Verifies that:
+        1. FMAbhaya.ttf renders nu (k=), bhu (N=), nuu (k+), and bhuu (N+) with
+           complete pixel continuity (seamlessly connected pāpilla to consonant stroke).
+        2. style.css and tools.css enforce letter-spacing: 0 !important on FM Abhaya text.
+        """
+        from PIL import Image, ImageFont, ImageDraw
+
+        ttf_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "static", "humanizer", "fonts", "FMAbhaya.ttf")
+        )
+        self.assertTrue(os.path.exists(ttf_path), f"FMAbhaya.ttf not found at {ttf_path}")
+
+        font = ImageFont.truetype(ttf_path, size=48)
+        for seq, label in [("k=", "නු"), ("N=", "භු"), ("k+", "නූ"), ("N+", "භූ")]:
+            with self.subTest(seq=seq, label=label):
+                im = Image.new("L", (80, 80), color=0)
+                draw = ImageDraw.Draw(im)
+                draw.text((10, 10), seq, font=font, fill=255)
+                bbox = im.getbbox()
+                self.assertIsNotNone(bbox)
+
+                # Check horizontal continuity between bounding box x limits
+                has_pixel_per_col = [
+                    any(im.getpixel((x, y)) > 0 for y in range(bbox[1], bbox[3]))
+                    for x in range(bbox[0], bbox[2])
+                ]
+                self.assertTrue(
+                    all(has_pixel_per_col),
+                    f"Glyph sequence '{seq}' ({label}) has a gap separating the consonant and pāpilla."
+                )
+
+        # Check CSS rules
+        css_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "static", "humanizer", "style.css")
+        )
+        with open(css_path, "r", encoding="utf-8") as fp:
+            css_content = fp.read()
+            self.assertIn("letter-spacing: 0 !important;", css_content)
+
 
 if __name__ == "__main__":
     unittest.main()

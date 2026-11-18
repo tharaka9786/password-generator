@@ -125,6 +125,7 @@ C:\wamp64\www\password-generator\ (or /opt/lampp/htdocs/password-generator/)
     ├── test_strength_checker.py
     ├── test_hash_generator.py
     ├── test_breach_checker.py
+    ├── test_humanizer.py         # Sinhala Unicode to FM Abhaya font conversion tests
     ├── test_models.py            # Unit tests for SQLAlchemy ORM models
     ├── test_account.py           # Integration tests for Auth, Vault & History
     └── test_routes.py            # Integration test for all 12 pages and 12 APIs
@@ -172,7 +173,7 @@ cd C:\wamp64\www\password-generator
 
 ## 🧪 Running Automated Tests
 
-Run the complete test suite (87 unit and integration tests):
+Run the complete test suite (90 unit and integration tests):
 
 ```powershell
 cd C:\wamp64\www\password-generator

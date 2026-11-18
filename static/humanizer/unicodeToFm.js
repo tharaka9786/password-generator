@@ -142,7 +142,7 @@
   // Special Consonant + Diga Papi-pilla (ූ) indexed by baseCons
   const SPECIAL_DIGA_PAPI_BY_CONS = {
     'ද': '¥', 'ඳ': 'ª', 'ර': 'rE', 'ක': 'l+', 'ග': '.+',
-    'ත': ';+', 'ල': 'Æ', 'ඤ': 'ü'
+    'ත': ';+', 'ල': 'Æ', 'ඤ': 'ü', 'ළ': '<Q'
   };
 
   // Special Consonant + Aeda-pilla (ැ) indexed by baseCons
@@ -191,6 +191,21 @@
 
     // Step 1: Normalize input (NFC) and strip stray ZWNJ (\u200C)
     let input = text.normalize('NFC').replace(/\u200C/g, '');
+
+    // Canonicalize decomposed Sinhala vowel signs & independent vowels
+    // Prevents decomposed Dīrgha Pāpilla (\u0DD4\u0DDF) falling back to short Pāpilla (\u0DD4)
+    input = input
+      .replace(/\u0DD4\u0DDF/g, '\u0DD6') // \u0DD4 + \u0DDF -> \u0DD6 (Dīrgha Pāpilla ූ)
+      .replace(/\u0DD2\u0DDF/g, '\u0DD3') // \u0DD2 + \u0DDF -> \u0DD3 (Dīrgha Is-pilla ී)
+      .replace(/\u0DD0\u0DDF/g, '\u0DD1') // \u0DD0 + \u0DDF -> \u0DD1 (Dīrgha Aeda-pilla ෑ)
+      .replace(/\u0DD8\u0DDF/g, '\u0DF2') // \u0DD8 + \u0DDF -> \u0DF2 (Dīrgha Gayanukitta ෲ)
+      .replace(/\u0D85\u0DCF/g, 'ආ')      // \u0D85 + \u0DCF -> ආ
+      .replace(/\u0D85\u0DD0/g, 'ඇ')      // \u0D85 + \u0DD0 -> ඇ
+      .replace(/\u0D85\u0DD1/g, 'ඈ')      // \u0D85 + \u0DD1 -> ඈ
+      .replace(/\u0D8B\u0DDF/g, 'ඌ')      // \u0D8B + \u0DDF -> ඌ
+      .replace(/\u0D91\u0DCA/g, 'ඒ')      // \u0D91 + \u0DCA -> ඒ
+      .replace(/\u0D94\u0DDF/g, 'ඖ');     // \u0D94 + \u0DDF -> ඖ
+
     let out = '';
     let i = 0;
     const len = input.length;
@@ -214,8 +229,23 @@
         }
       }
       if (matchedIndep) {
-        out += matchedIndep.code;
-        i += matchedIndep.iv.length;
+        let indepOut = matchedIndep.code;
+        let consumed = matchedIndep.iv.length;
+
+        // Check if immediately followed by Anusvara (ං \u0D82) or Visarga (ඃ \u0D83)
+        if (consumed < remaining.length) {
+          const nextChar = remaining[consumed];
+          if (nextChar === '\u0D82') {
+            indepOut += 'x';
+            consumed += 1;
+          } else if (nextChar === '\u0D83') {
+            indepOut += 'X';
+            consumed += 1;
+          }
+        }
+
+        out += indepOut;
+        i += consumed;
         continue;
       }
 
@@ -228,11 +258,6 @@
       if (remaining.startsWith('ශ්රී')) {
         out += '›';
         i += 4;
-        continue;
-      }
-      if (remaining.startsWith('ළු')) {
-        out += '¿';
-        i += 1;
         continue;
       }
 
@@ -403,7 +428,7 @@
         // 4. Anusvara / Visarga
         if (anusvara) {
           if (anusvara === '\u0D82') syllOut += 'x';
-          if (anusvara === '\u0D83') syllOut += '#';
+          if (anusvara === '\u0D83') syllOut += 'X';
         }
 
         out += syllOut;
@@ -411,7 +436,19 @@
         continue;
       }
 
-      // 5. Unrecognized character (spaces, symbols, newlines, etc.) - pass verbatim
+      // 5. Standalone Anusvara (ං) or Visarga (ඃ)
+      if (remaining[0] === '\u0D82') {
+        out += 'x';
+        i += 1;
+        continue;
+      }
+      if (remaining[0] === '\u0D83') {
+        out += 'X';
+        i += 1;
+        continue;
+      }
+
+      // 6. Unrecognized character (spaces, symbols, newlines, etc.) - pass verbatim
       out += remaining[0];
       i += 1;
     }

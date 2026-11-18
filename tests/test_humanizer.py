@@ -38,17 +38,18 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
         and confirms zero leftover Sinhala Unicode characters ([\\u0D80-\\u0DFF]).
         """
         expected_outputs = {
-            "භූමිකාව": "NQñldj",
-            "\u0DB7\u0DD4\u0DDFමිකාව": "NQñldj",  # Decomposed Dīrgha Pāpilla (\u0DD4\u0DDF)
-            "භුමි": "Nqñ",
+            "භූමිය": "N+ñh",
+            "භූමිකාව": "N+ñldj",
+            "\u0DB7\u0DD4\u0DDFමිකාව": "N+ñldj",  # Decomposed Dīrgha Pāpilla (\u0DD4\u0DDF)
+            "භුමි": "N=ñ",
             "අංශ": "wxY",
             "අංක": "wxl",
-            "හූණා": "yQKd",
+            "හූණා": "y+Kd",
             "කූඩුව": "l+vqj",
             "ගූඪ": ".+V",
             "තූර්ය": ";+¾h",
-            "නූල": "kQ,",
-            "ළූණු": "<QKq",
+            "නූල": "k+,",
+            "ළූණු": "<+Kq",
         }
 
         for word, expected in expected_outputs.items():
@@ -58,6 +59,43 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
                 # Ensure no raw Sinhala Unicode codepoints remain
                 has_raw = any("\u0D80" <= ch <= "\u0DFF" for ch in output)
                 self.assertFalse(has_raw, f"Leftover Sinhala Unicode characters in '{output}' for input '{word}'")
+
+    def test_curved_bottom_consonant_integrated_ligatures(self):
+        """
+        Verifies that curved-bottom consonants use integrated FMAbhaya.ttf ligatures
+        (= for short ු, + for long ූ, or dedicated glyphs) instead of detached q/Q.
+        """
+        expected_ligatures = {
+            "භු": "N=",
+            "භූ": "N+",
+            "හු": "y=",
+            "හූ": "y+",
+            "කු": "l=",
+            "කූ": "l+",
+            "ගු": ".=",
+            "ගූ": ".+",
+            "තු": ";=",
+            "තූ": ";+",
+            "නු": "k=",
+            "නූ": "k+",
+            "ශු": "Y=",
+            "ශූ": "Y+",
+            "ළු": "¿",
+            "ළූ": "<+",
+            "රු": "re",
+            "රූ": "rE",
+        }
+
+        for sinhala_char, expected_fm in expected_ligatures.items():
+            with self.subTest(char=sinhala_char):
+                actual_fm = self._convert(sinhala_char)
+                self.assertEqual(
+                    actual_fm,
+                    expected_fm,
+                    f"Expected integrated ligature '{expected_fm}' for '{sinhala_char}', got '{actual_fm}'"
+                )
+                self.assertNotIn('q', actual_fm, f"Should not use detached 'q' for '{sinhala_char}'")
+                self.assertNotIn('Q', actual_fm, f"Should not use detached 'Q' for '{sinhala_char}'")
 
     def test_distinct_short_vs_long_papilla(self):
         """

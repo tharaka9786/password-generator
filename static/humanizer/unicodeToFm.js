@@ -133,16 +133,18 @@
     'ඡ': 'Â', 'ඵ': 'Ú', 'ඪ': 'Ð', 'ඹ': 'ö', 'ණ': '\u0152'
   };
 
-  // Special Consonant + Papi-pilla (ු) indexed by baseCons
+  // Special Consonant + Papi-pilla (ු) indexed by baseCons (smooth curved-bottom ligatures & dedicated glyphs)
   const SPECIAL_PAPI_BY_CONS = {
     'ද': 'ÿ', 'ඳ': '÷', 'ර': 're', 'ක': 'l=', 'ග': '.=',
-    'ත': ';=', 'ල': '¨', 'ඤ': 'û', 'ළ': '¿'
+    'ත': ';=', 'භ': 'N=', 'හ': 'y=', 'න': 'k=', 'ශ': 'Y=',
+    'ඟ': 'Õ=', 'ල': '¨', 'ඤ': 'û', 'ළ': '¿'
   };
 
-  // Special Consonant + Diga Papi-pilla (ූ) indexed by baseCons
+  // Special Consonant + Diga Papi-pilla (ූ) indexed by baseCons (smooth curved-bottom ligatures & dedicated glyphs)
   const SPECIAL_DIGA_PAPI_BY_CONS = {
     'ද': '¥', 'ඳ': 'ª', 'ර': 'rE', 'ක': 'l+', 'ග': '.+',
-    'ත': ';+', 'ල': 'Æ', 'ඤ': 'ü', 'ළ': '<Q'
+    'ත': ';+', 'භ': 'N+', 'හ': 'y+', 'න': 'k+', 'ශ': 'Y+',
+    'ඟ': 'Õ+', 'ල': 'Æ', 'ඤ': 'ü', 'ළ': '<+'
   };
 
   // Special Consonant + Aeda-pilla (ැ) indexed by baseCons

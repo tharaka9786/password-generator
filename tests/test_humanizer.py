@@ -41,7 +41,7 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
             "භූමිය": "N+ñh",
             "භූමිකාව": "N+ñldj",
             "\u0DB7\u0DD4\u0DDFමිකාව": "N+ñldj",  # Decomposed Dīrgha Pāpilla (\u0DD4\u0DDF)
-            "භුමි": "N=ñ",
+            "භුමි": "Nqñ",
             "අංශ": "wxY",
             "අංක": "wxl",
             "හූණා": "y+Kd",
@@ -62,11 +62,11 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
 
     def test_curved_bottom_consonant_integrated_ligatures(self):
         """
-        Verifies that curved-bottom consonants use integrated FMAbhaya.ttf ligatures
-        (= for short ු, + for long ූ, or dedicated glyphs) instead of detached q/Q.
+        Verifies that consonants with descending strokes use =, flat/rounded consonants (නු, භු)
+        use standard tucked-under q, and long ූ uses integrated + ligatures or dedicated glyphs.
         """
         expected_ligatures = {
-            "භු": "N=",
+            "භු": "Nq",
             "භූ": "N+",
             "හු": "y=",
             "හූ": "y+",
@@ -76,7 +76,7 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
             "ගූ": ".+",
             "තු": ";=",
             "තූ": ";+",
-            "නු": "k=",
+            "නු": "kq",
             "නූ": "k+",
             "ශු": "Y=",
             "ශූ": "Y+",
@@ -92,9 +92,10 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
                 self.assertEqual(
                     actual_fm,
                     expected_fm,
-                    f"Expected integrated ligature '{expected_fm}' for '{sinhala_char}', got '{actual_fm}'"
+                    f"Expected mapping '{expected_fm}' for '{sinhala_char}', got '{actual_fm}'"
                 )
-                self.assertNotIn('q', actual_fm, f"Should not use detached 'q' for '{sinhala_char}'")
+                if 'q' not in expected_fm:
+                    self.assertNotIn('q', actual_fm, f"Should not use 'q' for '{sinhala_char}'")
                 self.assertNotIn('Q', actual_fm, f"Should not use detached 'Q' for '{sinhala_char}'")
 
     def test_distinct_short_vs_long_papilla(self):
@@ -159,7 +160,7 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
     def test_font_glyph_continuity_and_css_letter_spacing(self):
         """
         Verifies that:
-        1. FMAbhaya.ttf renders nu (k=), bhu (N=), nuu (k+), and bhuu (N+) with
+        1. FMAbhaya.ttf renders nu (kq), bhu (Nq), nuu (k+), and bhuu (N+) with
            complete pixel continuity (seamlessly connected pāpilla to consonant stroke).
         2. style.css and tools.css enforce letter-spacing: 0 !important on FM Abhaya text.
         """
@@ -171,7 +172,7 @@ class TestSinhalaUnicodeToFmAbhaya(unittest.TestCase):
         self.assertTrue(os.path.exists(ttf_path), f"FMAbhaya.ttf not found at {ttf_path}")
 
         font = ImageFont.truetype(ttf_path, size=48)
-        for seq, label in [("k=", "නු"), ("N=", "භු"), ("k+", "නූ"), ("N+", "භූ")]:
+        for seq, label in [("kq", "නු"), ("Nq", "භු"), ("k+", "නූ"), ("N+", "භූ")]:
             with self.subTest(seq=seq, label=label):
                 im = Image.new("L", (80, 80), color=0)
                 draw = ImageDraw.Draw(im)
